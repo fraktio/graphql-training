@@ -1,0 +1,7 @@
+type Person {
+  id: ID!
+}
+
+type Query {
+  person(id: Int!): Person
+}

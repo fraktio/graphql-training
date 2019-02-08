@@ -1,0 +1,9 @@
+{
+  "cors": {
+    "accessControlAllowOrigin": ["^https://enjoy.works.frakt.io$", "^https://enjoy.works$"]
+  },
+  "graphql": {
+    "playground": false,
+    "engineProxy": true
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "defaultSeverity": "error",
+  "extends": ["tslint:latest"],
+  "jsRules": {},
+  "rules": {
+    "arrow-parens": [true, "ban-single-arg-parens"],
+    "interface-name": [true, "never-prefix"],
+    "max-line-length": {
+      "options": [100]
+    },
+    "no-implicit-dependencies": [true, ["@src", "@app"]],
+    "no-submodule-imports": [true, "@src", "@app"],
+    "no-default-export": true,
+    "semicolon": [true, "never"],
+    "trailing-comma": [false],
+    "typedef": [
+      true,
+      "call-signature",
+      "arrow-call-signature",
+      "parameter",
+      "property-declaration",
+      "member-variable-declaration"
+    ],
+    "quotemark": [true, "single", "jsx-double"]
+  },
+  "rulesDirectory": []
+}

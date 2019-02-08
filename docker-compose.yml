@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  # Database
+  database:
+    image: postgres:11.1-alpine
+    environment:
+      - POSTGRES_DB=enjoy
+      - POSTGRES_USER=enjoy
+      - POSTGRES_PASSWORD=enjoy
+      - TZ=Europe/Helsinki
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  # Test database
+  test_database:
+    image: postgres:11.1-alpine
+    environment:
+      - POSTGRES_DB=enjoy_test
+      - POSTGRES_USER=enjoy
+      - POSTGRES_PASSWORD=enjoy
+      - TZ=Europe/Helsinki
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - test_database:/var/lib/postgresql/data
+
+volumes:
+  database:
+  test_database:

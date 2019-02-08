@@ -1,0 +1,9 @@
+{
+  "cors": {
+    "accessControlAllowOrigin": [".*"]
+  },
+  "graphql": {
+    "playground": false,
+    "engineProxy": false
+  }
+}
