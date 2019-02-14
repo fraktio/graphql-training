@@ -1,0 +1,19 @@
+scalar PostalCode
+
+scalar Municipality
+
+scalar Phone
+
+scalar Email
+
+type Address {
+  streetAddress: String!
+  postalCode: PostalCode!
+  municipality: Municipality!
+}
+
+input AddressInput {
+  streetAddress: String!
+  postalCode: PostalCode!
+  municipality: Municipality!
+}

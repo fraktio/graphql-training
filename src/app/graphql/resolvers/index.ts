@@ -1,8 +1,10 @@
+import { commonResolvers } from './commonResolvers'
+import { dateResolvers } from './dateResolvers'
 import { personResolvers } from './personResolvers'
-import { scalarResolvers } from './scalarResolvers'
 
 export const resolvers = {
-  ...scalarResolvers,
+  ...commonResolvers,
+  ...dateResolvers,
   ...personResolvers
 }
 

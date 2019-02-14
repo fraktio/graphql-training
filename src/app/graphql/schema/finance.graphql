@@ -1,0 +1,5 @@
+scalar Currency
+
+scalar IBAN
+
+scalar BIC

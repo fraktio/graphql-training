@@ -1,6 +1,8 @@
 import { ApolloEngine } from 'apollo-engine'
 import { ApolloServer } from 'apollo-server-express'
 
+import { Context } from '@src/app/graphql/types'
+import { createLoaderFactories } from '@src/app/loader'
 import { Config } from '@src/config'
 import { createSchema } from '@src/util/graphql'
 
@@ -17,7 +19,20 @@ export function createApolloServer(config: Config): ApolloServer {
     // By setting this to "false", we avoid using Apollo Server 2's
     // integrated metric reporting and fall-back to using the Apollo
     // Engine Proxy (running separately) for metric collection.
-    engine: false
+    engine: false,
+
+    formatError: error => {
+      // tslint:disable-next-line:no-console
+      console.error(error)
+
+      return error
+    },
+
+    context: async (): Promise<Context> => {
+      return {
+        loadersFactories: createLoaderFactories()
+      }
+    }
   })
 }
 

@@ -1,0 +1,63 @@
+scalar PersonalIdentityCode
+
+scalar Nationality
+
+scalar Language
+
+type Person implements Node {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  nickName: String
+  personalIdentityCode: PersonalIdentityCode!
+  phone: Phone!
+  email: Email!
+  address: Address!
+  nationality: Nationality!
+  iban: IBAN
+  bankAccountIsShared: Boolean!
+  bic: BIC
+  desiredSalary: Currency
+  preferredWorkingAreas: [Municipality!]!
+  languages: [Language!]!
+  limitations: String
+  uiLanguage: UILanguage!
+}
+
+input AddPersonInput {
+  person: PersonInput!
+}
+
+input PersonInput {
+  firstName: String!
+  lastName: String!
+  nickName: String
+  personalIdentityCode: PersonalIdentityCode!
+  phone: Phone
+  email: Email!
+  address: AddressInput!
+  nationality: Nationality!
+  iban: IBAN
+  bankAccountIsShared: Boolean!
+  bic: BIC
+  desiredSalary: Currency
+  preferredWorkingAreas: [String!]!
+  languages: [Language!]!
+  limitations: String
+}
+
+union AddPersonOutput = AddPersonSuccess | ValidationErrors
+
+type AddPersonSuccess {
+  person: Person!
+}
+
+type Query {
+  persons: [Person!]!
+
+  person(id: Int!): Person
+}
+
+type Mutation {
+  addPerson(input: AddPersonInput!): AddPersonOutput!
+}

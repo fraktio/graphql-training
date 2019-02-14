@@ -1,7 +1,7 @@
 import { format, parse } from 'date-fns'
 import { GraphQLScalarType, Kind, ValueNode } from 'graphql'
 
-export const scalarResolvers = {
+export const dateResolvers = {
   Date: new GraphQLScalarType({
     description: 'Date custom scalar type',
     name: 'Date',

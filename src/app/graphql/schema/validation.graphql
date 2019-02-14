@@ -1,0 +1,12 @@
+type ValidationErrors {
+  validationErrors: [ValidationError!]!
+}
+
+type ValidationError {
+  field: String!
+  code: ValidationErrorCode!
+}
+
+enum ValidationErrorCode {
+  UNIQUE_CONSTRAINT_VIOLATION
+}

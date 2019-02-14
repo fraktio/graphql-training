@@ -11,17 +11,17 @@
     "no-implicit-dependencies": [true, ["@src", "@app"]],
     "no-submodule-imports": [true, "@src", "@app"],
     "no-default-export": true,
+    "no-relative-imports": [true, "allow-siblings"],
     "semicolon": [true, "never"],
     "trailing-comma": [false],
     "typedef": [
       true,
       "call-signature",
-      "arrow-call-signature",
       "parameter",
       "property-declaration",
       "member-variable-declaration"
     ],
     "quotemark": [true, "single", "jsx-double"]
   },
-  "rulesDirectory": []
+  "rulesDirectory": ["node_modules/tslint-microsoft-contrib"]
 }
