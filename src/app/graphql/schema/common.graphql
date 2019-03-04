@@ -1,3 +1,6 @@
+scalar KSUID
+
 interface Node {
-  id: ID!
+  # K-Sortable Globally Unique ID (= KSUID)
+  ksuid: KSUID!
 }

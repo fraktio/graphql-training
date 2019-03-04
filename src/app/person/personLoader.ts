@@ -1,18 +1,19 @@
 import DataLoader from 'dataloader'
+import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 
 import { AbstractLoaderFactory } from '@app/loader/AbstractLoaderFactory'
 import { getPersons } from '@app/person/personRepository'
 import { PersonRecord } from '@app/person/types'
 
-export type PersonLoader = DataLoader<number, PersonRecord | null>
+export type PersonLoader = DataLoader<KSUID, PersonRecord | null>
 
 export class PersonLoaderFactory extends AbstractLoaderFactory<PersonLoader> {
   protected createLoader(client: PoolClient): PersonLoader {
-    return new DataLoader(async ids => {
-      const persons = await getPersons(client, ids)
+    return new DataLoader(async ksuids => {
+      const persons = await getPersons(client, ksuids)
 
-      return ids.map(id => persons.find(person => person.id === id) || null)
+      return ksuids.map(ksuid => persons.find(person => person.ksuid.equals(ksuid)) || null)
     })
   }
 }

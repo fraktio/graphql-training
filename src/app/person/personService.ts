@@ -1,3 +1,4 @@
+import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 
 import { PersonLoader } from '@app/person/personLoader'
@@ -14,13 +15,13 @@ export async function getAllPersons(
 ): Promise<PersonRecord[]> {
   const persons = await repositoryGetAllPersons(client)
 
-  persons.forEach(person => loader.prime(person.id, person))
+  persons.forEach(person => loader.prime(person.ksuid, person))
 
   return persons
 }
 
-export async function getPerson(loader: PersonLoader, id: number): Promise<PersonRecord | null> {
-  return loader.load(id)
+export async function getPerson(loader: PersonLoader, ksuid: KSUID): Promise<PersonRecord | null> {
+  return loader.load(ksuid)
 }
 
 export async function addPerson(

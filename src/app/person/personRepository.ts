@@ -1,3 +1,4 @@
+import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
@@ -12,14 +13,16 @@ export async function getAllPersons(client: PoolClient): Promise<PersonRecord[]>
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getPersons(client: PoolClient, ids: number[]): Promise<PersonRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM person WHERE id = ANY (${ids})`)
+export async function getPersons(client: PoolClient, ksuids: KSUID[]): Promise<PersonRecord[]> {
+  const result = await client.query(
+    SQL`SELECT * FROM person WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
+  )
 
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getPerson(client: PoolClient, id: number): Promise<PersonRecord | null> {
-  const result = await client.query(SQL`SELECT * FROM person WHERE id = ${id}`)
+export async function getPerson(client: PoolClient, ksuid: KSUID): Promise<PersonRecord | null> {
+  const result = await client.query(SQL`SELECT * FROM person WHERE ksuid = ${ksuid.string}`)
 
   const row = result.rows[0]
 
@@ -27,18 +30,21 @@ export async function getPerson(client: PoolClient, id: number): Promise<PersonR
 }
 
 async function tryGetPerson(client: PoolClient, id: number): Promise<PersonRecord> {
-  const person = await getPerson(client, id)
+  const result = await client.query(SQL`SELECT * FROM person WHERE id = ${id}`)
 
-  if (!person) {
+  const row = result.rows[0]
+
+  if (!row) {
     throw new Error(`Person was expected to be found with id ${id}`)
   }
 
-  return person
+  return toRecord(row)
 }
 
 interface PersonRow
   extends Readonly<{
     id: number
+    ksuid: string
     user_account_id: number
     address_id: number
     first_name: string
@@ -59,7 +65,7 @@ interface PersonRow
 
 function toRecord(row: PersonRow): PersonRecord {
   const {
-    id,
+    ksuid,
     user_account_id,
     address_id,
     first_name,
@@ -85,7 +91,7 @@ function toRecord(row: PersonRow): PersonRecord {
     desiredSalary: desired_salary,
     firstName: first_name,
     iban,
-    id,
+    ksuid: KSUID.parse(ksuid),
     languages: toLanguages(languages),
     lastName: last_name,
     limitations,
@@ -139,9 +145,12 @@ export async function addPerson(
 
   return withUniqueConstraintHandling(
     async () => {
+      const ksuid = await KSUID.random()
+
       const insertResult = await client.query(
         SQL`
           INSERT INTO person (
+            ksuid,
             user_account_id,
             address_id,
             first_name,
@@ -159,6 +168,7 @@ export async function addPerson(
             preferred_working_areas,
             desired_salary
           ) VALUES (
+            ${ksuid.string},
             ${user.id},
             ${personAddress.id},
             ${firstName},

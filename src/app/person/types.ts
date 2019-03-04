@@ -1,3 +1,5 @@
+import KSUID from 'ksuid'
+
 import { AddressInput, Email, Phone } from '@app/address/types'
 import { BIC, Currency, IBAN } from '@app/finance/types'
 
@@ -17,7 +19,7 @@ export type Nationality = string
 
 export interface PersonRecord
   extends Readonly<{
-    id: number
+    ksuid: KSUID
     userAccountId: number
     addressId: number
     firstName: string

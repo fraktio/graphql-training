@@ -5,12 +5,12 @@ scalar Nationality
 scalar Language
 
 type Person implements Node {
-  id: ID!
+  ksuid: KSUID!
   firstName: String!
   lastName: String!
   nickName: String
   personalIdentityCode: PersonalIdentityCode!
-  phone: Phone!
+  phone: Phone
   email: Email!
   address: Address!
   nationality: Nationality!
@@ -18,7 +18,7 @@ type Person implements Node {
   bankAccountIsShared: Boolean!
   bic: BIC
   desiredSalary: Currency
-  preferredWorkingAreas: [Municipality!]!
+  preferredWorkingAreas: [String!]!
   languages: [Language!]!
   limitations: String
   uiLanguage: UILanguage!
@@ -55,7 +55,7 @@ type AddPersonSuccess {
 type Query {
   persons: [Person!]!
 
-  person(id: Int!): Person
+  person(ksuid: KSUID!): Person
 }
 
 type Mutation {

@@ -6,7 +6,7 @@ import { addPerson, getAllPersons, getPerson } from '@app/person/personService'
 import { AddPersonInput, PersonRecord } from '@app/person/types'
 import { tryGetUser } from '@app/user/userService'
 import { transaction, UniqueConstraintViolationError } from '@app/util/database'
-import { IdArgs, Root } from '.'
+import { IdArgs, Root } from './types'
 
 export interface AddPersonArgs
   extends Readonly<{
@@ -77,7 +77,7 @@ export const personResolvers = {
       return transaction(async client => {
         personLoaderFactory.injectClient(client)
 
-        return getPerson(personLoaderFactory.getLoader(), args.id)
+        return getPerson(personLoaderFactory.getLoader(), args.ksuid)
       })
     }
   },

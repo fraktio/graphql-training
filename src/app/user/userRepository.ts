@@ -1,3 +1,4 @@
+import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
@@ -51,18 +52,22 @@ export async function addUserForPerson(
   // password is foobar
   const password = '$2a$12$aGpBRIHl0DZlsCn5.z2N4O4L/iDGU.inT4iApLUWrHATBtUikdNqC'
 
+  const ksuid = await KSUID.random()
+
   return withUniqueConstraintHandling(
     async () => {
       const insertResult = await client.query(
         SQL`
-        INSERT INTO user_account (
-          email,
-          password
-        ) VALUES (
-          ${email},
-          ${password}
-        ) RETURNING id
-      `
+          INSERT INTO user_account (
+            ksuid,
+            email,
+            password
+          ) VALUES (
+            ${ksuid.string},
+            ${email},
+            ${password}
+          ) RETURNING id
+        `
       )
 
       return tryGetUser(client, insertResult.rows[0].id)

@@ -7,9 +7,3 @@ export const resolvers = {
   ...dateResolvers,
   ...personResolvers
 }
-
-export type Root = typeof undefined
-
-export interface IdArgs {
-  id: number
-}
