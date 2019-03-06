@@ -1,8 +1,8 @@
 import { ApolloEngine } from 'apollo-engine'
 import { ApolloServer } from 'apollo-server-express'
 
-import { Context } from '@src/app/graphql/types'
-import { createLoaderFactories } from '@src/app/loader'
+import { Context } from '@app/graphql/types'
+import { createLoaderFactories } from '@app/loader'
 import { Config } from '@src/config'
 import { createSchema } from '@src/util/graphql'
 

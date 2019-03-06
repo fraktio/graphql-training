@@ -1,6 +1,7 @@
 import KSUID from 'ksuid'
 
 import { AddressInput, Email, Phone } from '@app/address/types'
+import { Timestamp } from '@app/date/types'
 import { BIC, Currency, IBAN } from '@app/finance/types'
 
 export enum UILanguage {
@@ -36,6 +37,7 @@ export interface PersonRecord
     languages: Language[]
     limitations: string | null
     uiLanguage: UILanguage
+    timestamp: Timestamp
   }> {}
 
 export interface AddPersonInput

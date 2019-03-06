@@ -61,6 +61,8 @@ interface PersonRow
     limitations: string | null
     preferred_working_areas: string[]
     desired_salary: number | null
+    created_at: Date
+    modified_at: Date | null
   }> {}
 
 function toRecord(row: PersonRow): PersonRecord {
@@ -81,7 +83,9 @@ function toRecord(row: PersonRow): PersonRecord {
     languages,
     limitations,
     preferred_working_areas,
-    desired_salary
+    desired_salary,
+    created_at,
+    modified_at
   } = row
 
   return {
@@ -100,6 +104,10 @@ function toRecord(row: PersonRow): PersonRecord {
     personalIdentityCode: personal_identity_code,
     phone,
     preferredWorkingAreas: preferred_working_areas,
+    timestamp: {
+      createdAt: created_at,
+      modifiedAt: modified_at
+    },
     uiLanguage: ui_language,
     userAccountId: user_account_id
   }

@@ -1,6 +1,6 @@
 scalar KSUID
 
 interface Node {
-  # K-Sortable Globally Unique ID (= KSUID)
-  ksuid: KSUID!
+  ksuid: KSUID! # K-Sortable Globally Unique ID (= KSUID)
+  timestamp: Timestamp!
 }
