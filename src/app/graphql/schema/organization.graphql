@@ -1,0 +1,11 @@
+type Organization implements Node {
+  ksuid: KSUID!
+  slug: Slug!
+  name: String!
+  timestamp: Timestamp!
+  providers: [Provider!]!
+}
+
+type Query {
+  organization(slug: Slug!): Organization
+}

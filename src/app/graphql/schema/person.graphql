@@ -26,6 +26,7 @@ type Person implements Node {
 }
 
 input AddPersonInput {
+  providerKsuid: KSUID!
   person: PersonInput!
 }
 
@@ -45,6 +46,12 @@ input PersonInput {
   preferredWorkingAreas: [String!]!
   languages: [Language!]!
   limitations: String
+  personEmployment: PersonEmploymentInput!
+}
+
+input PersonEmploymentInput {
+  collectiveAgreementKsuid: KSUID!
+  employment: EmploymentInput!
 }
 
 union AddPersonOutput = AddPersonSuccess | ValidationErrors

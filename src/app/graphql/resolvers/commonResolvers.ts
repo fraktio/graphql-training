@@ -1,5 +1,8 @@
-import { GraphQLError, GraphQLScalarType, Kind, ValueNode } from 'graphql'
+import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
 import KSUID from 'ksuid'
+
+import { KsuidOutput, ScalarType } from './types'
+import { parseScalarLiteral, parseScalarValue } from './util'
 
 export interface Node {
   __typename: string
@@ -10,20 +13,31 @@ export const commonResolvers = {
     description: 'KSUID custom scalar type',
     name: 'KSUID',
 
-    serialize(value: KSUID): string {
-      return value.string
+    serialize(value: KSUID): KsuidOutput {
+      return {
+        type: ScalarType.KSUID,
+        value: value.string
+      }
     },
 
     parseValue(value: any): KSUID {
-      return KSUID.parse(value)
+      const scalarValue = parseScalarValue<string>(value, ScalarType.KSUID)
+
+      try {
+        return KSUID.parse(scalarValue)
+      } catch (e) {
+        throw new GraphQLError('KSUID needs a field named "value" with a valid KSUID')
+      }
     },
 
     parseLiteral(ast: ValueNode): KSUID {
-      if (ast.kind !== Kind.STRING) {
-        throw new GraphQLError(`KSUID type should be String, found ${ast.kind}.`)
-      }
+      const scalarValue = parseScalarLiteral(ast, ScalarType.KSUID)
 
-      return KSUID.parse(ast.value)
+      try {
+        return KSUID.parse(scalarValue)
+      } catch (e) {
+        throw new GraphQLError('KSUID needs a field named "value" with a valid KSUID')
+      }
     }
   }),
 

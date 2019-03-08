@@ -2,16 +2,18 @@ import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
+import { ID, Maybe } from '@app/common/types'
 import { UserRecord } from '@app/user/types'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
+import { asId } from '@app/validation'
 
-export async function getUsers(client: PoolClient, ids: number[]): Promise<UserRecord[]> {
+export async function getUserRecords(client: PoolClient, ids: ID[]): Promise<UserRecord[]> {
   const result = await client.query(SQL`SELECT * FROM user_account WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getUser(client: PoolClient, id: number): Promise<UserRecord | null> {
+export async function getUserRecord(client: PoolClient, id: ID): Promise<Maybe<UserRecord>> {
   const result = await client.query(SQL`SELECT * FROM user_account WHERE id = ${id}`)
 
   const row = result.rows[0]
@@ -19,8 +21,8 @@ export async function getUser(client: PoolClient, id: number): Promise<UserRecor
   return row ? toRecord(row) : null
 }
 
-async function tryGetUser(client: PoolClient, id: number): Promise<UserRecord> {
-  const user = await getUser(client, id)
+export async function tryGetUserRecord(client: PoolClient, id: ID): Promise<UserRecord> {
+  const user = await getUserRecord(client, id)
 
   if (!user) {
     throw new Error(`User was expected to be found with id ${id}`)
@@ -41,11 +43,11 @@ function toRecord(row: UserRow): UserRecord {
 
   return {
     email,
-    id
+    id: asId(id)
   }
 }
 
-export async function addUserForPerson(
+export async function addUserRecordForPerson(
   client: PoolClient,
   email: string
 ): Promise<UserRecord | UniqueConstraintViolationError> {
@@ -70,7 +72,7 @@ export async function addUserForPerson(
         `
       )
 
-      return tryGetUser(client, insertResult.rows[0].id)
+      return tryGetUserRecord(client, insertResult.rows[0].id)
     },
     () => 'email'
   )

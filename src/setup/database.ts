@@ -1,6 +1,8 @@
 import { Pool } from 'pg'
 
-let pool: Pool
+import { Maybe } from '@app/common/types'
+
+let pool: Maybe<Pool>
 
 export function initializeDatabase(connectionString: string): void {
   pool = new Pool({
@@ -16,4 +18,12 @@ export function getPool(): Pool {
   }
 
   return pool
+}
+
+export function shutdownDatabase(): void {
+  if (!pool) {
+    throw new Error('Cannot shutdown database because pool is not initialized')
+  }
+
+  pool.end()
 }

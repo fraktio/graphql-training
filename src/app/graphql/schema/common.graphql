@@ -1,5 +1,9 @@
 scalar KSUID
 
+scalar Slug
+
+scalar BusinessID
+
 interface Node {
   ksuid: KSUID! # K-Sortable Globally Unique ID (= KSUID)
   timestamp: Timestamp!

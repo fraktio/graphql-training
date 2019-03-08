@@ -1,30 +1,17 @@
 import { PoolClient } from 'pg'
 
+import { Maybe } from '@app/common/types'
+
 export abstract class AbstractLoaderFactory<Loader> {
-  private client: PoolClient | null = null
-  private loader: Loader | null = null
+  private loader: Maybe<Loader> = null
 
-  public injectClient(client: PoolClient): void {
-    this.client = client
-  }
-
-  public getLoader(): Loader {
+  public getLoader(client: PoolClient): Loader {
     if (!this.loader) {
-      this.loader = this.initialize()
+      this.loader = this.createLoader(client)
     }
 
     return this.loader
   }
 
   protected abstract createLoader(client: PoolClient): Loader
-
-  private initialize(): Loader {
-    const client = this.client
-
-    if (!client) {
-      throw new Error('Client is not set. You should call injectClient(client) before getLoader()')
-    }
-
-    return this.createLoader(client)
-  }
 }

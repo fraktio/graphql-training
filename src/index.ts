@@ -11,8 +11,7 @@ const app = createApp()
 
 const host = process.env.HOST
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : null
-const databaseUrl =
-  app.get('env') === 'test' ? process.env.TEST_DATABASE_URL : process.env.DATABASE_URL
+const databaseUrl = process.env.DATABASE_URL
 
 if (port == null) {
   throw new Error('process.env.PORT is not defined!')
@@ -21,11 +20,7 @@ if (host == null) {
   throw new Error('process.env.HOST is not defined!')
 }
 if (databaseUrl == null) {
-  if (app.get('env') === 'test') {
-    throw new Error('process.env.TEST_DATABASE_URL is not defined!')
-  } else {
-    throw new Error('process.env.DATABASE_URL is not defined!')
-  }
+  throw new Error('process.env.DATABASE_URL is not defined!')
 }
 
 const config = readConfigByApplication(app)

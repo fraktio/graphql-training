@@ -32,6 +32,12 @@ To run tests:
 
 - `yarn test`
 
+## Scripts
+
+To get started you can create a test organization and a provider by running:
+
+- `yarn create-provider`
+
 ## Accessing database (PostgreSQL)
 
 - `docker-compose exec database psql -Uenjoy enjoy`

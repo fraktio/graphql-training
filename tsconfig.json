@@ -14,13 +14,14 @@
     "module": "commonjs",
     "lib": ["es2017"],
     "noEmit": true,
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@src/*": ["./*"],
-      "@app/*": ["./app/*"]
+      "@src/*": ["./src/*"],
+      "@app/*": ["./src/app/*"],
+      "@test/*": ["./__tests__/*"]
     },
     "moduleResolution": "node"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "__tests__/**/*"],
   "exclude": ["node_modules", "build"]
 }

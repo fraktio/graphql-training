@@ -14,10 +14,11 @@
     [
       "module-resolver",
       {
-        "root": ["./src"],
+        "root": ["./src", "./__tests__"],
         "alias": {
           "@src": "./src",
-          "@app": "./src/app"
+          "@app": "./src/app",
+          "@test": "./__tests__"
         },
         "extensions": [".ts"]
       }

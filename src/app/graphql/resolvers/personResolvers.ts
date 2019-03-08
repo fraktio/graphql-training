@@ -1,12 +1,15 @@
 import { tryGetAddress } from '@app/address/addressService'
 import { AddressRecord, Email } from '@app/address/types'
+import { getCollectiveAgreement } from '@app/collective-agreement/collectiveAgreementService'
+import { Maybe } from '@app/common/types'
 import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
-import { Context } from '@app/graphql/types'
+import { Context, NotFoundError } from '@app/graphql/types'
 import { addPerson, getAllPersons, getPerson } from '@app/person/personService'
 import { AddPersonInput, PersonRecord } from '@app/person/types'
+import { getProvider } from '@app/provider/providerService'
 import { tryGetUser } from '@app/user/userService'
 import { transaction, UniqueConstraintViolationError } from '@app/util/database'
-import { IdArgs, Root } from './types'
+import { KSUIDArgs, Root } from './types'
 
 export interface AddPersonArgs
   extends Readonly<{
@@ -26,12 +29,10 @@ export const personResolvers = {
     async email(
       person: PersonRecord,
       _: {},
-      { loadersFactories: { userLoaderFactory } }: Context
+      { loaderFactories: { userLoaderFactory } }: Context
     ): Promise<Email> {
       return transaction(async client => {
-        userLoaderFactory.injectClient(client)
-
-        const user = await tryGetUser(userLoaderFactory.getLoader(), person.userAccountId)
+        const user = await tryGetUser(userLoaderFactory.getLoader(client), person.userAccountId)
 
         return user.email
       })
@@ -40,12 +41,10 @@ export const personResolvers = {
     async address(
       person: PersonRecord,
       _: {},
-      { loadersFactories: { addressLoaderFactory } }: Context
+      { loaderFactories: { addressLoaderFactory } }: Context
     ): Promise<AddressRecord> {
       return transaction(async client => {
-        addressLoaderFactory.injectClient(client)
-
-        return tryGetAddress(addressLoaderFactory.getLoader(), person.addressId)
+        return tryGetAddress(addressLoaderFactory.getLoader(client), person.addressId)
       })
     }
   },
@@ -60,32 +59,52 @@ export const personResolvers = {
     async persons(
       _0: Root,
       _1: {},
-      { loadersFactories: { personLoaderFactory } }: Context
+      { loaderFactories: { personByKsuidLoaderFactory } }: Context
     ): Promise<PersonRecord[]> {
       return transaction(async client => {
-        personLoaderFactory.injectClient(client)
-
-        return getAllPersons(personLoaderFactory.getLoader(), client)
+        return getAllPersons(personByKsuidLoaderFactory.getLoader(client), client)
       })
     },
 
     async person(
       _: Root,
-      args: IdArgs,
-      { loadersFactories: { personLoaderFactory } }: Context
-    ): Promise<PersonRecord | null> {
+      args: KSUIDArgs,
+      { loaderFactories: { personByKsuidLoaderFactory } }: Context
+    ): Promise<Maybe<PersonRecord>> {
       return transaction(async client => {
-        personLoaderFactory.injectClient(client)
-
-        return getPerson(personLoaderFactory.getLoader(), args.ksuid)
+        return getPerson(personByKsuidLoaderFactory.getLoader(client), args.ksuid)
       })
     }
   },
 
   Mutation: {
-    async addPerson(_: Root, { input }: AddPersonArgs): Promise<AddPersonOutput> {
+    async addPerson(
+      _: Root,
+      { input }: AddPersonArgs,
+      {
+        loaderFactories: { providerByKsuidLoaderFactory, collectiveAgreementByKsuidLoaderFactory }
+      }: Context
+    ): Promise<AddPersonOutput> {
       return transaction(async client => {
-        const result = await addPerson(client, input)
+        const provider = await getProvider(
+          providerByKsuidLoaderFactory.getLoader(client),
+          input.providerKsuid
+        )
+
+        if (!provider) {
+          throw new NotFoundError('Provider was not found')
+        }
+
+        const collectiveAgreement = await getCollectiveAgreement(
+          collectiveAgreementByKsuidLoaderFactory.getLoader(client),
+          input.person.personEmployment.collectiveAgreementKsuid
+        )
+
+        if (!collectiveAgreement) {
+          throw new NotFoundError('CollectiveAgreement was not found')
+        }
+
+        const result = await addPerson(client, input, provider, collectiveAgreement)
 
         if (result instanceof UniqueConstraintViolationError) {
           return {

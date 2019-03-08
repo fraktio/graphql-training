@@ -30,7 +30,7 @@ export function createApolloServer(config: Config): ApolloServer {
 
     context: async (): Promise<Context> => {
       return {
-        loadersFactories: createLoaderFactories()
+        loaderFactories: createLoaderFactories()
       }
     }
   })

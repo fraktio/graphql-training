@@ -2,14 +2,16 @@ import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { AddressInput, AddressRecord } from '@app/address/types'
+import { ID, Maybe } from '@app/common/types'
+import { asId } from '@app/validation'
 
-export async function getAddresses(client: PoolClient, ids: number[]): Promise<AddressRecord[]> {
+export async function getAddressRecords(client: PoolClient, ids: ID[]): Promise<AddressRecord[]> {
   const result = await client.query(SQL`SELECT * FROM address WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getAddress(client: PoolClient, id: number): Promise<AddressRecord | null> {
+export async function getAddressRecord(client: PoolClient, id: ID): Promise<Maybe<AddressRecord>> {
   const result = await client.query(SQL`SELECT * FROM address WHERE id = ${id}`)
 
   const row = result.rows[0]
@@ -17,8 +19,8 @@ export async function getAddress(client: PoolClient, id: number): Promise<Addres
   return row ? toRecord(row) : null
 }
 
-async function tryGetAddress(client: PoolClient, id: number): Promise<AddressRecord> {
-  const address = await getAddress(client, id)
+export async function tryGetAddressRecord(client: PoolClient, id: ID): Promise<AddressRecord> {
+  const address = await getAddressRecord(client, id)
 
   if (!address) {
     throw new Error(`Address was expected to be found with id ${id}`)
@@ -33,7 +35,7 @@ interface AddressRow
     street_address: string
     postal_code: string
     municipality: string
-    country: string | null
+    country: string
   }> {}
 
 function toRecord(row: AddressRow): AddressRecord {
@@ -41,14 +43,17 @@ function toRecord(row: AddressRow): AddressRecord {
 
   return {
     country,
-    id,
+    id: asId(id),
     municipality,
     postalCode: postal_code,
     streetAddress: street_address
   }
 }
 
-export async function addAddress(client: PoolClient, input: AddressInput): Promise<AddressRecord> {
+export async function addAddressRecord(
+  client: PoolClient,
+  input: AddressInput
+): Promise<AddressRecord> {
   const { streetAddress, postalCode, municipality, country } = input
 
   const insertResult = await client.query(
@@ -67,5 +72,5 @@ export async function addAddress(client: PoolClient, input: AddressInput): Promi
     `
   )
 
-  return tryGetAddress(client, insertResult.rows[0].id)
+  return tryGetAddressRecord(client, insertResult.rows[0].id)
 }

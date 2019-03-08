@@ -2,6 +2,8 @@ scalar PostalCode
 
 scalar Municipality
 
+scalar Country
+
 scalar Phone
 
 scalar Email
@@ -10,10 +12,12 @@ type Address {
   streetAddress: String!
   postalCode: PostalCode!
   municipality: Municipality!
+  country: Country!
 }
 
 input AddressInput {
   streetAddress: String!
   postalCode: PostalCode!
   municipality: Municipality!
+  country: Country!
 }

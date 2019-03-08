@@ -1,0 +1,18 @@
+type Provider implements Node {
+  ksuid: KSUID!
+  slug: Slug!
+  name: String!
+  businessId: BusinessID!
+  timestamp: Timestamp!
+  providerPersons: [ProviderPerson!]!
+  organization: Organization!
+}
+
+type ProviderPerson {
+  person: Person!
+  employments: [Employment!]!
+}
+
+type Query {
+  provider(organizationSlug: Slug!, providerSlug: Slug!): Provider
+}

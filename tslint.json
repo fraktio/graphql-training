@@ -1,15 +1,13 @@
 {
   "defaultSeverity": "error",
-  "extends": ["tslint:latest"],
+  "extends": ["tslint:latest", "tslint-config-prettier"],
   "jsRules": {},
   "rules": {
+    "prettier": true,
     "arrow-parens": [true, "ban-single-arg-parens"],
     "interface-name": [true, "never-prefix"],
-    "max-line-length": {
-      "options": [100]
-    },
-    "no-implicit-dependencies": [true, ["@src", "@app"]],
-    "no-submodule-imports": [true, "@src", "@app"],
+    "no-implicit-dependencies": [true, ["@src", "@app", "@test"]],
+    "no-submodule-imports": [true, "@src", "@app", "@test", "lodash", "graphql"],
     "no-default-export": true,
     "no-relative-imports": [true, "allow-siblings"],
     "semicolon": [true, "never"],
@@ -23,5 +21,5 @@
     ],
     "quotemark": [true, "single", "jsx-double"]
   },
-  "rulesDirectory": ["node_modules/tslint-microsoft-contrib"]
+  "rulesDirectory": ["node_modules/tslint-microsoft-contrib", "tslint-plugin-prettier"]
 }

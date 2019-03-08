@@ -1,5 +1,7 @@
+import { ID } from '@app/common/types'
+
 export interface UserRecord
   extends Readonly<{
-    id: number
+    id: ID
     email: string
   }> {}

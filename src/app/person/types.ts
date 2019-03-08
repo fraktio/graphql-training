@@ -1,7 +1,9 @@
 import KSUID from 'ksuid'
 
 import { AddressInput, Email, Phone } from '@app/address/types'
+import { ID, Maybe } from '@app/common/types'
 import { Timestamp } from '@app/date/types'
+import { EmploymentInput } from '@app/employment/types'
 import { BIC, Currency, IBAN } from '@app/finance/types'
 
 export enum UILanguage {
@@ -20,28 +22,30 @@ export type Nationality = string
 
 export interface PersonRecord
   extends Readonly<{
+    id: ID
     ksuid: KSUID
-    userAccountId: number
-    addressId: number
+    userAccountId: ID
+    addressId: ID
     firstName: string
     lastName: string
-    nickName: string | null
+    nickName: Maybe<string>
     personalIdentityCode: PersonalIdentityCode
-    phone: Phone | null
+    phone: Maybe<Phone>
     nationality: Nationality
-    iban: IBAN | null
+    iban: Maybe<IBAN>
     bankAccountIsShared: boolean
-    bic: BIC | null
-    desiredSalary: Currency | null
+    bic: Maybe<BIC>
+    desiredSalary: Maybe<Currency>
     preferredWorkingAreas: string[]
     languages: Language[]
-    limitations: string | null
+    limitations: Maybe<string>
     uiLanguage: UILanguage
     timestamp: Timestamp
   }> {}
 
 export interface AddPersonInput
   extends Readonly<{
+    providerKsuid: KSUID
     person: PersonInput
   }> {}
 
@@ -49,17 +53,24 @@ interface PersonInput
   extends Readonly<{
     firstName: string
     lastName: string
-    nickName: string | null
+    nickName: Maybe<string>
     personalIdentityCode: PersonalIdentityCode
-    phone: Phone | null
+    phone: Maybe<Phone>
     email: Email
     address: AddressInput
     nationality: Nationality
-    iban: IBAN | null
+    iban: Maybe<IBAN>
     bankAccountIsShared: boolean
-    bic: BIC | null
-    desiredSalary: Currency | null
+    bic: Maybe<BIC>
+    desiredSalary: Maybe<Currency>
     preferredWorkingAreas: string[]
     languages: Language[]
-    limitations: string | null
+    limitations: Maybe<string>
+    personEmployment: PersonEmploymentInput
+  }> {}
+
+interface PersonEmploymentInput
+  extends Readonly<{
+    collectiveAgreementKsuid: KSUID
+    employment: EmploymentInput
   }> {}

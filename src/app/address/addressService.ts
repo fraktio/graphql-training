@@ -1,7 +1,9 @@
 import { AddressLoader } from '@app/address/addressLoader'
 import { AddressRecord } from '@app/address/types'
 
-export async function tryGetAddress(loader: AddressLoader, id: number): Promise<AddressRecord> {
+import { ID } from '@app/common/types'
+
+export async function tryGetAddress(loader: AddressLoader, id: ID): Promise<AddressRecord> {
   const address = await loader.load(id)
 
   if (!address) {
