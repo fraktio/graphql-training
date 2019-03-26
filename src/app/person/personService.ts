@@ -1,4 +1,3 @@
-import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 
 import { AddressLoader } from '@app/address/loader/types'
@@ -8,7 +7,6 @@ import { PersonLoader } from '@app/person/loader/types'
 import {
   addPersonRecord,
   editPersonRecord,
-  getPersonRecordByKsuid,
   getPersonRecordsByProvider
 } from '@app/person/personRepository'
 import { AddPersonInput, EditPersonInput, PersonRecord } from '@app/person/types'
@@ -25,20 +23,6 @@ export async function tryGetPerson(loader: PersonLoader, id: ID): Promise<Person
 
   if (!person) {
     throw new Error(`Person was expected to be found with id ${id}`)
-  }
-
-  return person
-}
-
-export async function getPersonByKsuid(
-  loader: PersonLoader,
-  client: PoolClient,
-  ksuid: KSUID
-): Promise<Maybe<PersonRecord>> {
-  const person = await getPersonRecordByKsuid(client, ksuid)
-
-  if (person) {
-    loader.prime(person.id, person)
   }
 
   return person

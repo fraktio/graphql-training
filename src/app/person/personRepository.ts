@@ -29,17 +29,6 @@ export async function getPersonRecords(client: PoolClient, ids: ID[]): Promise<P
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getPersonRecordByKsuid(
-  client: PoolClient,
-  ksuid: KSUID
-): Promise<Maybe<PersonRecord>> {
-  const result = await client.query(SQL`SELECT * FROM person WHERE ksuid = ${ksuid.string}`)
-
-  const row = result.rows[0]
-
-  return row ? toRecord(row) : null
-}
-
 export async function tryGetPersonRecord(client: PoolClient, id: ID): Promise<PersonRecord> {
   const result = await client.query(SQL`SELECT * FROM person WHERE id = ${id}`)
 
