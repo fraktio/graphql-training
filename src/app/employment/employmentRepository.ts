@@ -6,7 +6,7 @@ import { CollectiveAgreementRecord } from '@app/collective-agreement/types'
 import { ID, Maybe } from '@app/common/types'
 import { PersonRecord } from '@app/person/types'
 import { ProviderPersonRecord, ProviderRecord } from '@app/provider/types'
-import { asId } from '@app/validation'
+import { asHour, asId } from '@app/validation'
 import { EmploymentInput, EmploymentRecord, EmploymentType } from './types'
 
 export async function getEmploymentRecords(
@@ -68,7 +68,7 @@ function toRecord(row: EmploymentRow): EmploymentRecord {
   } = row
 
   return {
-    averageHours: average_hours,
+    averageHours: average_hours == null ? null : asHour(average_hours),
     collectiveAgreementId: asId(collective_agreement_id),
     description,
     endDate: end_date,

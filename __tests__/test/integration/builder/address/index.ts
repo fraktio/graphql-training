@@ -2,13 +2,14 @@ import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { tryGetAddressRecord } from '@app/address/addressRepository'
-import { AddressRecord, Country, Municipality, PostalCode } from '@app/address/types'
+import { AddressRecord, CountryCode, Municipality, PostalCode } from '@app/address/types'
+import { asMunicipality, asPostalCode } from '@app/validation'
 
 class AddressBuilder {
   private streetAddress: string = 'Street address 123'
-  private postalCode: PostalCode = '00100'
-  private municipality: Municipality = 'Helsinki'
-  private country: Country = 'FI'
+  private postalCode: PostalCode = asPostalCode('00100')
+  private municipality: Municipality = asMunicipality('Helsinki')
+  private country: CountryCode = CountryCode.FI
 
   constructor(private readonly client: PoolClient) {}
 

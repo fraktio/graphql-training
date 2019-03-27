@@ -3,7 +3,7 @@ import SQL from 'sql-template-strings'
 
 import { AddressInput, AddressRecord } from '@app/address/types'
 import { ID, Maybe } from '@app/common/types'
-import { asId } from '@app/validation'
+import { asCountryCode, asId, asMunicipality, asPostalCode } from '@app/validation'
 
 export async function getAddressRecords(client: PoolClient, ids: ID[]): Promise<AddressRecord[]> {
   const result = await client.query(SQL`SELECT * FROM address WHERE id = ANY (${ids})`)
@@ -42,10 +42,10 @@ function toRecord(row: AddressRow): AddressRecord {
   const { id, street_address, postal_code, municipality, country } = row
 
   return {
-    country,
+    country: asCountryCode(country),
     id: asId(id),
-    municipality,
-    postalCode: postal_code,
+    municipality: asMunicipality(municipality),
+    postalCode: asPostalCode(postal_code),
     streetAddress: street_address
   }
 }

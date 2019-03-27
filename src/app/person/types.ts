@@ -1,14 +1,11 @@
 import KSUID from 'ksuid'
 
-import { AddressInput, Email, Phone } from '@app/address/types'
+import { AddressInput, CountryCode, Email, Phone } from '@app/address/types'
 import { ID, Maybe } from '@app/common/types'
 import { Timestamp } from '@app/date/types'
 import { EmploymentInput } from '@app/employment/types'
-import { BIC, Currency, IBAN } from '@app/finance/types'
-
-export enum UILanguage {
-  FI = 'FI'
-}
+import { BIC, IBAN, Money } from '@app/finance/types'
+import { UILanguage } from '@app/user/types'
 
 export enum Language {
   EN = 'EN',
@@ -16,9 +13,9 @@ export enum Language {
   SE = 'SE'
 }
 
-export type PersonalIdentityCode = string
-
-export type Nationality = string
+export interface PersonalIdentityCode extends String {
+  _personalIdentityCode: never
+}
 
 export interface PersonRecord
   extends Readonly<{
@@ -31,11 +28,11 @@ export interface PersonRecord
     nickName: Maybe<string>
     personalIdentityCode: PersonalIdentityCode
     phone: Maybe<Phone>
-    nationality: Nationality
+    nationality: CountryCode
     iban: Maybe<IBAN>
     bankAccountIsShared: boolean
     bic: Maybe<BIC>
-    desiredSalary: Maybe<Currency>
+    desiredSalary: Maybe<Money>
     preferredWorkingAreas: string[]
     languages: Language[]
     limitations: Maybe<string>
@@ -59,11 +56,11 @@ interface PersonInput
     phone: Maybe<Phone>
     email: Email
     address: AddressInput
-    nationality: Nationality
+    nationality: CountryCode
     iban: Maybe<IBAN>
     bankAccountIsShared: boolean
     bic: Maybe<BIC>
-    desiredSalary: Maybe<Currency>
+    desiredSalary: Maybe<Money>
     preferredWorkingAreas: string[]
     languages: Language[]
     limitations: Maybe<string>

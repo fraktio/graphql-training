@@ -4,7 +4,7 @@ import SQL from 'sql-template-strings'
 
 import { ID, Maybe, Slug } from '@app/common/types'
 import { OrganizationRecord } from '@app/organization/types'
-import { asBusinessID, asId, asSlug } from '@app/validation'
+import { asBusinessId, asId, asSlug } from '@app/validation'
 import { ProviderPersonRecord, ProviderRecord } from './types'
 
 export async function getProviderRecords(client: PoolClient, ids: ID[]): Promise<ProviderRecord[]> {
@@ -75,7 +75,7 @@ function toRecord(row: ProviderRow): ProviderRecord {
 
   return {
     addressId: asId(address_id),
-    businessId: asBusinessID(business_id),
+    businessId: asBusinessId(business_id),
     id: asId(id),
     ksuid: KSUID.parse(ksuid),
     name,

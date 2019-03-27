@@ -1,4 +1,4 @@
-import { validateBusinessID } from '@app/validation'
+import { validateBusinessId } from '@app/validation'
 import { ValidationError } from '@app/validation/types'
 
 describe('business id validation', () => {
@@ -6,7 +6,10 @@ describe('business id validation', () => {
     const businessIds = ['2617416-4', '0033438-5']
 
     businessIds.forEach(businessId => {
-      expect(validateBusinessID(businessId)).toBe(businessId)
+      expect(validateBusinessId(businessId)).toEqual({
+        success: true,
+        value: businessId
+      })
     })
   })
 
@@ -14,7 +17,10 @@ describe('business id validation', () => {
     const businessIds = ['', 'foo', ' 2617416-4', '2617416-4 ', '2617416-3']
 
     businessIds.forEach(businessId => {
-      expect(validateBusinessID(businessId)).toEqual(new ValidationError())
+      expect(validateBusinessId(businessId)).toEqual({
+        error: new ValidationError('BusinessID', businessId),
+        success: false
+      })
     })
   })
 })

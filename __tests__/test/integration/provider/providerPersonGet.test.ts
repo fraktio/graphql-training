@@ -1,12 +1,12 @@
 import { gql } from 'apollo-server-express'
 
-import { KsuidOutput, ScalarType } from '@app/graphql/resolvers/types'
+import { ScalarKsuid, ScalarType } from '@app/graphql/resolvers/types'
 import { createLoaderFactories } from '@app/loader'
 import { transaction } from '@app/util/database'
 import { anEmployment, anOrganization, aPerson, aProvider } from '@test/test/integration/builder'
 import { truncateDatabase } from '@test/util/database'
 import { executeAsSuccess } from '@test/util/graphql'
-import { toScalarKsuid } from '@test/util/scalar'
+import { toScalarKsuid, toScalarSlug } from '@test/util/scalar'
 import { asyncTest } from '@test/util/test'
 
 beforeEach(truncateDatabase)
@@ -37,7 +37,7 @@ interface ProviderPerson
 
 interface Person
   extends Readonly<{
-    ksuid: KsuidOutput
+    ksuid: ScalarKsuid
   }> {}
 
 describe('provider person get', () => {
@@ -67,9 +67,9 @@ describe('provider person get', () => {
       const response = await executeAsSuccess<GetProviderPersonResponse>(
         getPersonQuery,
         {
-          organizationSlug: organization.slug,
+          organizationSlug: toScalarSlug(organization.slug),
           personKsuid: toScalarKsuid(person.ksuid),
-          providerSlug: provider.slug
+          providerSlug: toScalarSlug(provider.slug)
         },
         context
       )

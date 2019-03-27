@@ -11,17 +11,20 @@ import { CollectiveAgreementRecord } from '@app/collective-agreement/types'
 import { toFailure, toSuccess } from '@app/common'
 import { ID, Maybe, Try } from '@app/common/types'
 import { addEmploymentRecord } from '@app/employment/employmentRepository'
-import {
-  AddPersonInput,
-  EditPersonInput,
-  Language,
-  PersonRecord,
-  UILanguage
-} from '@app/person/types'
+import { AddPersonInput, EditPersonInput, Language, PersonRecord } from '@app/person/types'
 import { ProviderRecord } from '@app/provider/types'
+import { UILanguage } from '@app/user/types'
 import { addUserRecordForPerson, editUserRecord, tryGetUserRecord } from '@app/user/userRepository'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
-import { asId } from '@app/validation'
+import {
+  asBic,
+  asCountryCode,
+  asIban,
+  asId,
+  asMoney,
+  asPersonalIdentityCode,
+  asPhone
+} from '@app/validation'
 
 export async function getPersonRecords(client: PoolClient, ids: ID[]): Promise<PersonRecord[]> {
   const result = await client.query(SQL`SELECT * FROM person WHERE id = ANY (${ids})`)
@@ -60,7 +63,7 @@ interface PersonRow
     languages: string
     limitations: Maybe<string>
     preferred_working_areas: string[]
-    desired_salary: Maybe<string>
+    desired_salary: Maybe<number>
     created_at: Date
     modified_at: Maybe<Date>
   }> {}
@@ -92,19 +95,19 @@ function toRecord(row: PersonRow): PersonRecord {
   return {
     addressId: asId(address_id),
     bankAccountIsShared: bank_account_is_shared,
-    bic,
-    desiredSalary: desired_salary == null ? null : parseFloat(desired_salary),
+    bic: bic ? asBic(bic) : null,
+    desiredSalary: desired_salary == null ? null : asMoney(desired_salary),
     firstName: first_name,
-    iban,
+    iban: iban ? asIban(iban) : null,
     id: asId(id),
     ksuid: KSUID.parse(ksuid),
     languages: toLanguages(languages),
     lastName: last_name,
     limitations,
-    nationality,
+    nationality: asCountryCode(nationality),
     nickName: nick_name,
-    personalIdentityCode: personal_identity_code,
-    phone,
+    personalIdentityCode: asPersonalIdentityCode(personal_identity_code),
+    phone: phone ? asPhone(phone) : null,
     preferredWorkingAreas: preferred_working_areas,
     timestamp: {
       createdAt: created_at,
@@ -197,7 +200,7 @@ export async function addPersonRecord(
             ${languages},
             ${limitations},
             ${preferredWorkingAreas},
-            ${desiredSalary}
+            ${desiredSalary == null ? null : desiredSalary.getAmount()}
           ) RETURNING id
         `
       )
@@ -283,7 +286,7 @@ export async function editPersonRecord(
             languages = ${languages},
             limitations = ${limitations},
             preferred_working_areas = ${preferredWorkingAreas},
-            desired_salary = ${desiredSalary}
+            desired_salary = ${desiredSalary == null ? null : desiredSalary.getAmount()}
           WHERE
             id = ${person.id}
         `

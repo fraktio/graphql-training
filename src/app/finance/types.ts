@@ -1,5 +1,13 @@
-export type Currency = number
+import Dinero, { Dinero as DineroType } from 'dinero.js'
 
-export type IBAN = string
+export const Money = Dinero
+export type Money = DineroType
 
-export type BIC = string
+// tslint:disable-next-line:interface-name
+export interface IBAN extends String {
+  _iban: never
+}
+
+export interface BIC extends String {
+  _bic: never
+}

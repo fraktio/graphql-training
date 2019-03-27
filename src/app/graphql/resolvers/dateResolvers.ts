@@ -1,25 +1,17 @@
 import { format, isValid, parse } from 'date-fns'
 import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
 
-import { ScalarType } from './types'
-import { parseScalarLiteral, parseScalarValue } from './util'
-
-interface DateOutput {
-  type: ScalarType.DATE
-  value: string
-}
-
-interface DateTimeOutput {
-  type: ScalarType.DATETIME
-  value: string
-}
+import { Hour } from '@app/date/types'
+import { validateHour } from '@app/validation'
+import { ScalarDate, ScalarDateTime, ScalarHour, ScalarType } from './types'
+import { parseIntScalarLiteral, parseScalarValue, parseStringScalarLiteral } from './util'
 
 export const dateResolvers = {
   Date: new GraphQLScalarType({
     description: 'Date custom scalar type',
     name: 'Date',
 
-    serialize(value: Date): DateOutput {
+    serialize(value: Date): ScalarDate {
       return {
         type: ScalarType.DATE,
         value: format(value, 'YYYY-MM-DD')
@@ -30,21 +22,17 @@ export const dateResolvers = {
       const scalarValue = parseScalarValue<string>(value, ScalarType.DATE)
 
       if (!isValidDate(scalarValue)) {
-        throw new GraphQLError(
-          `Date needs a field named "value" with a value in format "YYYY-MM-DD"`
-        )
+        throw new GraphQLError(`Date must be a valid date in format "YYYY-MM-DD"`)
       }
 
       return parse(scalarValue)
     },
 
     parseLiteral(ast: ValueNode): Date {
-      const scalarValue = parseScalarLiteral(ast, ScalarType.DATE)
+      const scalarValue = parseStringScalarLiteral(ast, ScalarType.DATE)
 
       if (!isValidDate(scalarValue)) {
-        throw new GraphQLError(
-          `Date needs a field named "value" with a value in format "YYYY-MM-DD"`
-        )
+        throw new GraphQLError(`Date must be a valid date in format "YYYY-MM-DD"`)
       }
 
       return parse(scalarValue)
@@ -55,7 +43,7 @@ export const dateResolvers = {
     description: 'DateTime custom scalar type',
     name: 'DateTime',
 
-    serialize(value: Date): DateTimeOutput {
+    serialize(value: Date): ScalarDateTime {
       return {
         type: ScalarType.DATETIME,
         value: format(value)
@@ -66,24 +54,56 @@ export const dateResolvers = {
       const scalarValue = parseScalarValue<string>(value, ScalarType.DATETIME)
 
       if (!isValidDateTime(scalarValue)) {
-        throw new GraphQLError(
-          `DateTime needs a field named "value" with a value in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`
-        )
+        throw new GraphQLError(`DateTime must be a valid date in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`)
       }
 
       return parse(scalarValue)
     },
 
     parseLiteral(ast: ValueNode): Date {
-      const scalarValue = parseScalarLiteral(ast, ScalarType.DATETIME)
+      const scalarValue = parseStringScalarLiteral(ast, ScalarType.DATETIME)
 
       if (!isValidDateTime(scalarValue)) {
-        throw new GraphQLError(
-          `Date needs a field named "value" with a value in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`
-        )
+        throw new GraphQLError(`DateTime must be a valid date in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`)
       }
 
       return parse(scalarValue)
+    }
+  }),
+
+  Hour: new GraphQLScalarType({
+    description: 'Hour custom scalar type',
+    name: 'Hour',
+
+    serialize(value: Hour): ScalarHour {
+      return {
+        type: ScalarType.HOUR,
+        value: parseInt(value.toString(), 10)
+      }
+    },
+
+    parseValue(value: any): Hour {
+      const scalarValue = parseScalarValue<number>(value, ScalarType.HOUR)
+
+      const result = validateHour(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('Hour must be a positive integer between 0 and 299')
+      }
+    },
+
+    parseLiteral(ast: ValueNode): Hour {
+      const scalarValue = parseIntScalarLiteral(ast, ScalarType.HOUR)
+
+      const result = validateHour(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('Hour must be a positive integer between 0 and 299')
+      }
     }
   })
 }

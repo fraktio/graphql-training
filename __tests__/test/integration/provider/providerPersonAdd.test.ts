@@ -1,15 +1,31 @@
 import { gql } from 'apollo-server-express'
 
-import { Country, Email, Municipality, Phone, PostalCode } from '@app/address/types'
+import { CountryCode } from '@app/address/types'
 import { Maybe } from '@app/common/types'
 import { Hour } from '@app/date/types'
 import { EmploymentType } from '@app/employment/types'
-import { BIC, Currency, IBAN } from '@app/finance/types'
-import { KsuidOutput, ScalarType } from '@app/graphql/resolvers/types'
+import { Money } from '@app/finance/types'
+import {
+  ScalarBIC,
+  ScalarCountryCode,
+  ScalarEmail,
+  ScalarIBAN,
+  ScalarKsuid,
+  ScalarLanguage,
+  ScalarMunicipality,
+  ScalarPersonalIdentityCode,
+  ScalarPhone,
+  ScalarPostalCode
+} from '@app/graphql/resolvers/types'
 import { createLoaderFactories } from '@app/loader'
-import { Language, Nationality, PersonalIdentityCode } from '@app/person/types'
 import { transaction } from '@app/util/database'
-import { asEmail } from '@app/validation'
+import {
+  asEmail,
+  asMunicipality,
+  asPersonalIdentityCode,
+  asPhone,
+  asPostalCode
+} from '@app/validation'
 import {
   aCollectiveAgreement,
   anEmployment,
@@ -19,6 +35,16 @@ import {
 } from '@test/test/integration/builder'
 import { truncateDatabase } from '@test/util/database'
 import { executeAsSuccess } from '@test/util/graphql'
+import {
+  toScalarCountryCode,
+  toScalarEmail,
+  toScalarKsuid,
+  toScalarMunicipality,
+  toScalarPersonalIdentityCode,
+  toScalarPhone,
+  toScalarPostalCode,
+  toScalarSlug
+} from '@test/util/scalar'
 import { asyncTest } from '@test/util/test'
 
 beforeEach(truncateDatabase)
@@ -39,7 +65,7 @@ interface AddPersonResponse
   extends Readonly<{
     addPerson: {
       person: {
-        ksuid: KsuidOutput
+        ksuid: ScalarKsuid
       }
     }
   }> {}
@@ -100,35 +126,35 @@ interface ProviderPerson
 
 interface Person
   extends Readonly<{
-    ksuid: KsuidOutput
+    ksuid: ScalarKsuid
     firstName: string
     lastName: string
     nickName: Maybe<string>
-    personalIdentityCode: PersonalIdentityCode
-    email: Email
-    phone: Maybe<Phone>
-    nationality: Nationality
+    personalIdentityCode: ScalarPersonalIdentityCode
+    email: ScalarEmail
+    phone: Maybe<ScalarPhone>
+    nationality: ScalarCountryCode
     preferredWorkingAreas: string[]
     bankAccountIsShared: boolean
-    bic: Maybe<BIC>
-    iban: Maybe<IBAN>
+    bic: Maybe<ScalarBIC>
+    iban: Maybe<ScalarIBAN>
     address: Address
-    desiredSalary: Maybe<Currency>
-    languages: Language[]
+    desiredSalary: Maybe<Money>
+    languages: ScalarLanguage[]
     limitations: Maybe<string>
   }> {}
 
 interface Address
   extends Readonly<{
     streetAddress: string
-    postalCode: PostalCode
-    municipality: Municipality
-    country: Country
+    postalCode: ScalarPostalCode
+    municipality: ScalarMunicipality
+    country: ScalarCountryCode
   }> {}
 
 interface Employment
   extends Readonly<{
-    ksuid: KsuidOutput
+    ksuid: ScalarKsuid
     type: EmploymentType
     startDate: Maybe<{
       type: 'DATE'
@@ -160,31 +186,28 @@ describe('provider person add', () => {
       const input = {
         person: {
           address: {
-            country: 'FI',
-            municipality: 'Helsinki',
-            postalCode: '01234',
+            country: toScalarCountryCode(CountryCode.FI),
+            municipality: toScalarMunicipality(asMunicipality('Helsinki')),
+            postalCode: toScalarPostalCode(asPostalCode('01234')),
             streetAddress: 'Street'
           },
           bankAccountIsShared: false,
           bic: null,
           desiredSalary: null,
-          email: 'foo@bar.com',
+          email: toScalarEmail(asEmail('foo@bar.com')),
           firstName: 'First',
           iban: null,
           languages: [],
           lastName: 'Last',
           limitations: null,
-          nationality: 'FIN',
+          nationality: toScalarCountryCode(CountryCode.FI),
           nickName: null,
-          personalIdentityCode: '181193-686L',
-          phone: '+358401234567',
+          personalIdentityCode: toScalarPersonalIdentityCode(asPersonalIdentityCode('181193-686L')),
+          phone: toScalarPhone(asPhone('+358401234567')),
           preferredWorkingAreas: []
         },
         personEmployment: {
-          collectiveAgreementKsuid: {
-            type: ScalarType.KSUID,
-            value: collectiveAgreement.ksuid.string
-          },
+          collectiveAgreementKsuid: toScalarKsuid(collectiveAgreement.ksuid),
           employment: {
             endDate: {
               type: 'DATE',
@@ -197,10 +220,7 @@ describe('provider person add', () => {
             type: EmploymentType.INDEFINITE_PART_TIME
           }
         },
-        providerKsuid: {
-          type: ScalarType.KSUID,
-          value: provider.ksuid.string
-        }
+        providerKsuid: toScalarKsuid(provider.ksuid)
       }
 
       const context = {
@@ -215,7 +235,10 @@ describe('provider person add', () => {
 
       const getProviderResponse = await executeAsSuccess<GetProviderResponse>(
         getProviderQuery,
-        { organizationSlug: organization.slug, providerSlug: provider.slug },
+        {
+          organizationSlug: toScalarSlug(organization.slug),
+          providerSlug: toScalarSlug(provider.slug)
+        },
         context
       )
 
@@ -227,25 +250,25 @@ describe('provider person add', () => {
 
       const expectedPerson: Person = {
         address: {
-          country: 'FI',
-          municipality: 'Helsinki',
-          postalCode: '01234',
+          country: toScalarCountryCode(CountryCode.FI),
+          municipality: toScalarMunicipality(asMunicipality('Helsinki')),
+          postalCode: toScalarPostalCode(asPostalCode('01234')),
           streetAddress: 'Street'
         },
         bankAccountIsShared: false,
         bic: null,
         desiredSalary: null,
-        email: asEmail('foo@bar.com'),
+        email: toScalarEmail(asEmail('foo@bar.com')),
         firstName: 'First',
         iban: null,
         ksuid: addPersonResponse.addPerson.person.ksuid,
         languages: [],
         lastName: 'Last',
         limitations: null,
-        nationality: 'FIN',
+        nationality: toScalarCountryCode(CountryCode.FI),
         nickName: null,
-        personalIdentityCode: '181193-686L',
-        phone: '+358401234567',
+        personalIdentityCode: toScalarPersonalIdentityCode(asPersonalIdentityCode('181193-686L')),
+        phone: toScalarPhone(asPhone('+358401234567')),
         preferredWorkingAreas: []
       }
 
@@ -302,7 +325,10 @@ describe('provider person add', () => {
 
       const getProviderResponse = await executeAsSuccess<GetProviderResponse>(
         getProviderQuery,
-        { organizationSlug: organization.slug, providerSlug: provider.slug },
+        {
+          organizationSlug: toScalarSlug(organization.slug),
+          providerSlug: toScalarSlug(provider.slug)
+        },
         context
       )
 

@@ -9,7 +9,10 @@ describe('slug validation', () => {
     ]
 
     slugs.forEach(slug => {
-      expect(validateSlug(slug)).toBe(slug)
+      expect(validateSlug(slug)).toEqual({
+        success: true,
+        value: slug
+      })
     })
   })
 
@@ -17,7 +20,10 @@ describe('slug validation', () => {
     const slugs = ['', 'a', 'ab', ' foo', 'bar ', '-xoo', 'lus-']
 
     slugs.forEach(slug => {
-      expect(validateSlug(slug)).toEqual(new ValidationError())
+      expect(validateSlug(slug)).toEqual({
+        error: new ValidationError('Slug', slug),
+        success: false
+      })
     })
   })
 })

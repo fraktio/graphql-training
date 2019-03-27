@@ -3,7 +3,7 @@ import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { ID, Maybe, Slug } from '@app/common/types'
-import { asBusinessID, asId, asSlug } from '@app/validation'
+import { asBusinessId, asId, asSlug } from '@app/validation'
 import { OrganizationRecord } from './types'
 
 export async function getOrganizationRecords(
@@ -56,7 +56,7 @@ function toRecord(row: OrganizationRow): OrganizationRecord {
 
   return {
     addressId: asId(address_id),
-    businessId: asBusinessID(business_id),
+    businessId: asBusinessId(business_id),
     id: asId(id),
     ksuid: KSUID.parse(ksuid),
     name,

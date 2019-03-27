@@ -1,17 +1,27 @@
+import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
+
 import { tryGetAddress } from '@app/address/addressService'
 import { AddressRecord, Email } from '@app/address/types'
 import { getCollectiveAgreement } from '@app/collective-agreement/collectiveAgreementService'
 import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
 import { Context, NotFoundError } from '@app/graphql/types'
 import { addPerson, editPerson, tryGetPerson } from '@app/person/personService'
-import { AddPersonInput, EditPersonInput, PersonRecord } from '@app/person/types'
+import {
+  AddPersonInput,
+  EditPersonInput,
+  Language,
+  PersonalIdentityCode,
+  PersonRecord
+} from '@app/person/types'
 import {
   getProviderByKsuid,
   getProviderPersonByProviderKsuidAndPersonKsuid
 } from '@app/provider/providerService'
 import { tryGetUser } from '@app/user/userService'
 import { transaction } from '@app/util/database'
-import { Root } from './types'
+import { validateLanguage, validatePersonalIdentityCode } from '@app/validation'
+import { Root, ScalarLanguage, ScalarPersonalIdentityCode, ScalarType } from './types'
+import { parseScalarValue, parseStringScalarLiteral } from './util'
 
 export interface AddPersonArgs
   extends Readonly<{
@@ -40,6 +50,78 @@ export interface EditPersonArgs
   }> {}
 
 export const personResolvers = {
+  PersonalIdentityCode: new GraphQLScalarType({
+    description: 'PersonalIdentityCode custom scalar type',
+    name: 'PersonalIdentityCode',
+
+    serialize(value: PersonalIdentityCode): ScalarPersonalIdentityCode {
+      return {
+        type: ScalarType.PERSONAL_IDENTITY_CODE,
+        value: value.toString()
+      }
+    },
+
+    parseValue(value: any): PersonalIdentityCode {
+      const scalarValue = parseScalarValue<string>(value, ScalarType.PERSONAL_IDENTITY_CODE)
+
+      const result = validatePersonalIdentityCode(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('PersonalIdentityCode must be a valid personal identity code')
+      }
+    },
+
+    parseLiteral(ast: ValueNode): PersonalIdentityCode {
+      const scalarValue = parseStringScalarLiteral(ast, ScalarType.PERSONAL_IDENTITY_CODE)
+
+      const result = validatePersonalIdentityCode(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('PersonalIdentityCode must be a valid personal identity code')
+      }
+    }
+  }),
+
+  Language: new GraphQLScalarType({
+    description: 'Language custom scalar type',
+    name: 'Language',
+
+    serialize(value: Language): ScalarLanguage {
+      return {
+        type: ScalarType.LANGUAGE,
+        value: value.toString()
+      }
+    },
+
+    parseValue(value: any): Language {
+      const scalarValue = parseScalarValue<string>(value, ScalarType.LANGUAGE)
+
+      const result = validateLanguage(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('Language must be a valid language')
+      }
+    },
+
+    parseLiteral(ast: ValueNode): Language {
+      const scalarValue = parseStringScalarLiteral(ast, ScalarType.LANGUAGE)
+
+      const result = validateLanguage(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('Language must be a valid language')
+      }
+    }
+  }),
+
   Person: {
     async email(
       person: PersonRecord,

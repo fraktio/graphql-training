@@ -2,22 +2,19 @@ import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
+import { CountryCode } from '@app/address/types'
 import { tryGetPersonRecord } from '@app/person/personRepository'
-import {
-  Language,
-  Nationality,
-  PersonalIdentityCode,
-  PersonRecord,
-  UILanguage
-} from '@app/person/types'
+import { Language, PersonalIdentityCode, PersonRecord } from '@app/person/types'
+import { UILanguage } from '@app/user/types'
+import { asPersonalIdentityCode } from '@app/validation'
 import { anAddress } from '@test/test/integration/builder/address'
 import { aUser } from '@test/test/integration/builder/user'
 
 class PersonBuilder {
   private firstName: string = 'First'
   private lastName: string = 'Last'
-  private personalIdentityCode: PersonalIdentityCode = '090676-656D'
-  private nationality: Nationality = 'FIN'
+  private personalIdentityCode: PersonalIdentityCode = asPersonalIdentityCode('090676-656D')
+  private nationality: CountryCode = CountryCode.FI
   private bankAccountIsShared: boolean = false
   private uiLanguage: UILanguage = UILanguage.FI
   private languages: Language[] = []

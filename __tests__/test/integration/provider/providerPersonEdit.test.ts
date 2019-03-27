@@ -1,17 +1,49 @@
 import { gql } from 'apollo-server-express'
 
-import { Country, Email, Municipality, Phone, PostalCode } from '@app/address/types'
+import { CountryCode } from '@app/address/types'
 import { Maybe } from '@app/common/types'
-import { BIC, Currency, IBAN } from '@app/finance/types'
-import { KsuidOutput } from '@app/graphql/resolvers/types'
+import {
+  ScalarBIC,
+  ScalarCountryCode,
+  ScalarEmail,
+  ScalarIBAN,
+  ScalarKsuid,
+  ScalarLanguage,
+  ScalarMoney,
+  ScalarMunicipality,
+  ScalarPersonalIdentityCode,
+  ScalarPhone,
+  ScalarPostalCode
+} from '@app/graphql/resolvers/types'
 import { createLoaderFactories } from '@app/loader'
-import { Language, Nationality, PersonalIdentityCode } from '@app/person/types'
+import { Language } from '@app/person/types'
 import { transaction } from '@app/util/database'
-import { asEmail } from '@app/validation'
+import {
+  asBic,
+  asEmail,
+  asIban,
+  asMoney,
+  asMunicipality,
+  asPersonalIdentityCode,
+  asPhone,
+  asPostalCode
+} from '@app/validation'
 import { anEmployment, aPerson, aProvider } from '@test/test/integration/builder'
 import { truncateDatabase } from '@test/util/database'
 import { executeAsSuccess } from '@test/util/graphql'
-import { toScalarKsuid } from '@test/util/scalar'
+import {
+  toScalarBic,
+  toScalarCountryCode,
+  toScalarEmail,
+  toScalarIban,
+  toScalarKsuid,
+  toScalarLanguage,
+  toScalarMoney,
+  toScalarMunicipality,
+  toScalarPersonalIdentityCode,
+  toScalarPhone,
+  toScalarPostalCode
+} from '@test/util/scalar'
 import { asyncTest } from '@test/util/test'
 
 beforeEach(truncateDatabase)
@@ -58,30 +90,30 @@ interface EditPersonResponse
 
 interface Person
   extends Readonly<{
-    ksuid: KsuidOutput
+    ksuid: ScalarKsuid
     firstName: string
     lastName: string
     nickName: Maybe<string>
-    personalIdentityCode: PersonalIdentityCode
-    email: Email
-    phone: Maybe<Phone>
-    nationality: Nationality
+    personalIdentityCode: ScalarPersonalIdentityCode
+    email: ScalarEmail
+    phone: Maybe<ScalarPhone>
+    nationality: ScalarCountryCode
     preferredWorkingAreas: string[]
     bankAccountIsShared: boolean
-    bic: Maybe<BIC>
-    iban: Maybe<IBAN>
+    bic: Maybe<ScalarBIC>
+    iban: Maybe<ScalarIBAN>
     address: Address
-    desiredSalary: Maybe<Currency>
-    languages: Language[]
+    desiredSalary: Maybe<ScalarMoney>
+    languages: ScalarLanguage[]
     limitations: Maybe<string>
   }> {}
 
 interface Address
   extends Readonly<{
     streetAddress: string
-    postalCode: PostalCode
-    municipality: Municipality
-    country: Country
+    postalCode: ScalarPostalCode
+    municipality: ScalarMunicipality
+    country: ScalarCountryCode
   }> {}
 
 describe('provider person edit', () => {
@@ -104,24 +136,24 @@ describe('provider person edit', () => {
         ksuid: toScalarKsuid(person.ksuid),
         person: {
           address: {
-            country: 'SE',
-            municipality: 'Espoo',
-            postalCode: '01234',
+            country: toScalarCountryCode(CountryCode.SE),
+            municipality: toScalarMunicipality(asMunicipality('Espoo')),
+            postalCode: toScalarPostalCode(asPostalCode('01234')),
             streetAddress: 'Street 123'
           },
           bankAccountIsShared: true,
-          bic: 'NDAEFIHH',
-          desiredSalary: 21.25,
-          email: 'john@smith.com',
+          bic: toScalarBic(asBic('NDAEFIHH')),
+          desiredSalary: toScalarMoney(asMoney(2125)),
+          email: toScalarEmail(asEmail('john@smith.com')),
           firstName: 'John',
-          iban: 'FI1340220142000625',
-          languages: [Language.EN, Language.SE],
+          iban: toScalarIban(asIban('FI1340220142000625')),
+          languages: [Language.EN, Language.SE].map(language => toScalarLanguage(language)),
           lastName: 'Smith',
           limitations: 'Xoo xoo',
-          nationality: 'FIN',
+          nationality: toScalarCountryCode(CountryCode.FI),
           nickName: 'Bob',
-          personalIdentityCode: '181193-686L',
-          phone: '+358401234567',
+          personalIdentityCode: toScalarPersonalIdentityCode(asPersonalIdentityCode('181193-686L')),
+          phone: toScalarPhone(asPhone('+358401234567')),
           preferredWorkingAreas: ['Helsinki']
         },
         providerKsuid: toScalarKsuid(provider.ksuid)
@@ -139,25 +171,25 @@ describe('provider person edit', () => {
 
       const expectedPerson: Person = {
         address: {
-          country: 'SE',
-          municipality: 'Espoo',
-          postalCode: '01234',
+          country: toScalarCountryCode(CountryCode.SE),
+          municipality: toScalarMunicipality(asMunicipality('Espoo')),
+          postalCode: toScalarPostalCode(asPostalCode('01234')),
           streetAddress: 'Street 123'
         },
         bankAccountIsShared: true,
-        bic: 'NDAEFIHH',
-        desiredSalary: 21.25,
-        email: asEmail('john@smith.com'),
+        bic: toScalarBic(asBic('NDAEFIHH')),
+        desiredSalary: toScalarMoney(asMoney(2125)),
+        email: toScalarEmail(asEmail('john@smith.com')),
         firstName: 'John',
-        iban: 'FI1340220142000625',
+        iban: toScalarIban(asIban('FI1340220142000625')),
         ksuid: toScalarKsuid(person.ksuid),
-        languages: [Language.EN, Language.SE],
+        languages: [Language.EN, Language.SE].map(language => toScalarLanguage(language)),
         lastName: 'Smith',
         limitations: 'Xoo xoo',
-        nationality: 'FIN',
+        nationality: toScalarCountryCode(CountryCode.FI),
         nickName: 'Bob',
-        personalIdentityCode: '181193-686L',
-        phone: '+358401234567',
+        personalIdentityCode: toScalarPersonalIdentityCode(asPersonalIdentityCode('181193-686L')),
+        phone: toScalarPhone(asPhone('+358401234567')),
         preferredWorkingAreas: ['Helsinki']
       }
 

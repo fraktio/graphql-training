@@ -1,8 +1,11 @@
 import { Maybe } from '@app/common/types'
 
-export type Hour = number
-
-export interface Timestamp {
-  createdAt: Date
-  modifiedAt: Maybe<Date>
+export interface Hour extends Number {
+  _hour: never
 }
+
+export interface Timestamp
+  extends Readonly<{
+    createdAt: Date
+    modifiedAt: Maybe<Date>
+  }> {}

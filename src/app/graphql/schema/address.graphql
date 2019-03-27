@@ -2,7 +2,7 @@ scalar PostalCode
 
 scalar Municipality
 
-scalar Country
+scalar CountryCode
 
 scalar Phone
 
@@ -12,12 +12,12 @@ type Address {
   streetAddress: String!
   postalCode: PostalCode!
   municipality: Municipality!
-  country: Country!
+  country: CountryCode!
 }
 
 input AddressInput {
   streetAddress: String!
   postalCode: PostalCode!
   municipality: Municipality!
-  country: Country!
+  country: CountryCode!
 }

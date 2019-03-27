@@ -1247,6 +1247,11 @@
   dependencies:
     "@types/express" "*"
 
+"@types/dinero.js@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@types/dinero.js/-/dinero.js-1.4.0.tgz#d00097a9dbbc7a732a26a814c3c999054285aa4e"
+  integrity sha512-5zvqxoVCrZkxhNzf7rMeiuJ0vpO7jKxmRQJvurSucvsZlPJPjVuemx/twqrDU7JPSOTCyF5TNfe4EmkhVVUJqw==
+
 "@types/dotenv@^6.1.0":
   version "6.1.0"
   resolved "https://registry.yarnpkg.com/@types/dotenv/-/dotenv-6.1.0.tgz#fba2bfd1f28a46eadaa049f3313ebb89bdedfc53"
@@ -3116,6 +3121,11 @@ diff@^3.1.0, diff@^3.2.0:
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
   integrity sha512-A46qtFgd+g7pDZinpnwiRJtxbC1hpgf0uzP3iG89scHk0AUC7A1TGxf5OiiOUv/JMZR8GOt8hL900hV0bOy5xA==
 
+dinero.js@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/dinero.js/-/dinero.js-1.6.0.tgz#d1e4fc4c1784cd8a853c2f1f1b1bb765736ec709"
+  integrity sha512-cmmC6N2XzJvynnUgMJkvUmPeiRgjv0t7G81EhcwbOtcOnLhhzhHN4qvYBYcqx1zuF0GOcEPg75KxPnVar7zYdQ==
+
 domexception@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/domexception/-/domexception-1.0.1.tgz#937442644ca6a31261ef36e3ec677fe805582c90"
@@ -3169,6 +3179,11 @@ elegant-spinner@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/elegant-spinner/-/elegant-spinner-1.0.1.tgz#db043521c95d7e303fd8f345bedc3349cfb0729e"
   integrity sha1-2wQ1IcldfjA/2PNFvtwzSc+wcp4=
+
+email-validator@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/email-validator/-/email-validator-2.0.4.tgz#b8dfaa5d0dae28f1b03c95881d904d4e40bfe7ed"
+  integrity sha512-gYCwo7kh5S3IDyZPLZf6hSS0MnZT8QmJFqYvbqlDZSbwdZlY6QZWxJ4i/6UhITOJ4XzyI647Bm2MXKCLqnJ4nQ==
 
 encodeurl@~1.0.2:
   version "1.0.2"
@@ -3573,6 +3588,11 @@ finnish-business-ids@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/finnish-business-ids/-/finnish-business-ids-3.1.0.tgz#4f2d160cd0fd5d605a257d13cb3c051c9f389167"
   integrity sha512-GUQi4I26kq+s7Joizg/79l26vPtmsD5IK8zbp/JclGBkBXtxFfRGofZeIBoKR9xcTomFmVLidefvUOe9ZAzZRQ==
+
+finnish-ssn@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/finnish-ssn/-/finnish-ssn-1.2.0.tgz#b7869525ebdfa8d13c45c53972385124e2db5157"
+  integrity sha512-wafYKVufnazsdGv3q3A4f7bR64VN8fYAgY0SHJ+e4yLu8wSqfBLbE0nCpU09JycHwkVHoFkTWb/QVpfVnU+uKA==
 
 flagged-respawn@^1.0.0:
   version "1.0.1"
@@ -4147,6 +4167,11 @@ hyperlinker@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/hyperlinker/-/hyperlinker-1.0.0.tgz#23dc9e38a206b208ee49bc2d6c8ef47027df0c0e"
   integrity sha512-Ty8UblRWFEcfSuIaajM34LdPXIhbs1ajEX/BBPv24J+enSVaEVY63xQ6lTO9VRYS5LAoghIG0IDJ+p+IPzKUQQ==
+
+ibantools@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ibantools/-/ibantools-2.0.0.tgz#d433f0d638990f55c0281e18bc58eafa06c8959d"
+  integrity sha512-B+s3YZcBn51MgrHqO7mB+Erxngp6vRY7fLAyMrtQ0MEaTOFhRU4uEOHzNTXpw+PLo8qLC5qmoy8lZSpa2O0ujw==
 
 iconv-lite@0.4.23:
   version "0.4.23"
@@ -5254,6 +5279,15 @@ levn@~0.3.0:
   dependencies:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
+
+libphonenumber-js@^1.7.14:
+  version "1.7.14"
+  resolved "https://registry.yarnpkg.com/libphonenumber-js/-/libphonenumber-js-1.7.14.tgz#e1182323a780db1bd704495355a858e3f40e9293"
+  integrity sha512-rxMNAy0zu/X2c4Js7+E/YMlEU8dBRSQuJ//WV5HafvxZlPeifg5ihVR2xVpLS+e8D4MY9htQ9FeMImlRtN18ng==
+  dependencies:
+    minimist "^1.2.0"
+    semver-compare "^1.0.0"
+    xml2js "^0.4.17"
 
 liftoff@2.5.0:
   version "2.5.0"
@@ -6910,10 +6944,15 @@ sane@^4.0.3:
     minimist "^1.1.1"
     walker "~1.0.5"
 
-sax@^1.2.4:
+sax@>=0.6.0, sax@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   integrity sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==
+
+semver-compare@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/semver-compare/-/semver-compare-1.0.0.tgz#0dee216a1c941ab37e9efb1788f6afc5ff5537fc"
+  integrity sha1-De4hahyUGrN+nvsXiPavxf9VN/w=
 
 semver-diff@^2.0.0:
   version "2.1.0"
@@ -8033,6 +8072,19 @@ xml-name-validator@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-3.0.0.tgz#6ae73e06de4d8c6e47f9fb181f78d648ad457c6a"
   integrity sha512-A5CUptxDsvxKJEU3yO6DuWBSJz/qizqzJKOMIfUJHETbBw/sFaDxgd6fxm1ewUaM0jZ444Fc5vC5ROYurg/4Pw==
+
+xml2js@^0.4.17:
+  version "0.4.19"
+  resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.19.tgz#686c20f213209e94abf0d1bcf1efaa291c7827a7"
+  integrity sha512-esZnJZJOiJR9wWKMyuvSE1y6Dq5LCuJanqhxslH2bxM6duahNZ+HMpCLhBQGZkbX6xRf8x1Y2eJlgt2q3qo49Q==
+  dependencies:
+    sax ">=0.6.0"
+    xmlbuilder "~9.0.1"
+
+xmlbuilder@~9.0.1:
+  version "9.0.7"
+  resolved "https://registry.yarnpkg.com/xmlbuilder/-/xmlbuilder-9.0.7.tgz#132ee63d2ec5565c557e20f4c22df9aca686b10d"
+  integrity sha1-Ey7mPS7FVlxVfiD0wi35rKaGsQ0=
 
 xtend@^4.0.0:
   version "4.0.1"
