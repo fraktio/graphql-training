@@ -25,9 +25,15 @@ type Person implements Node {
   timestamp: Timestamp!
 }
 
+type Mutation {
+  addPerson(input: AddPersonInput!): AddPersonOutput!
+  editPerson(input: EditPersonInput!): EditPersonOutput!
+}
+
 input AddPersonInput {
   providerKsuid: KSUID!
   person: PersonInput!
+  personEmployment: PersonEmploymentInput!
 }
 
 input PersonInput {
@@ -46,7 +52,6 @@ input PersonInput {
   preferredWorkingAreas: [String!]!
   languages: [Language!]!
   limitations: String
-  personEmployment: PersonEmploymentInput!
 }
 
 input PersonEmploymentInput {
@@ -60,12 +65,14 @@ type AddPersonSuccess {
   person: Person!
 }
 
-type Query {
-  persons: [Person!]!
-
-  person(ksuid: KSUID!): Person
+input EditPersonInput {
+  providerKsuid: KSUID!
+  ksuid: KSUID!
+  person: PersonInput!
 }
 
-type Mutation {
-  addPerson(input: AddPersonInput!): AddPersonOutput!
+union EditPersonOutput = EditPersonSuccess | ValidationErrors
+
+type EditPersonSuccess {
+  person: Person!
 }

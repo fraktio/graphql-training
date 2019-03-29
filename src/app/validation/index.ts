@@ -1,10 +1,15 @@
 import { FinnishBusinessIds } from 'finnish-business-ids'
 
+import { Email } from '@app/address/types'
 import { BusinessID, ID, Slug } from '@app/common/types'
 import { ValidationError } from './types'
 
 export function asId(value: number): ID {
   return (value as unknown) as ID
+}
+
+export function asEmail(value: string): Email {
+  return (value as unknown) as Email
 }
 
 export function validateSlug(value: string): Slug | ValidationError {

@@ -12,11 +12,11 @@ export const organizationResolvers = {
     async providers(
       organization: OrganizationRecord,
       _: {},
-      { loaderFactories: { providerByKsuidLoaderFactory } }: Context
+      { loaderFactories: { providerLoaderFactory } }: Context
     ): Promise<ProviderRecord[]> {
       return transaction(async client => {
         return getProvidersByOrganization(
-          providerByKsuidLoaderFactory.getLoader(client),
+          providerLoaderFactory.getLoaders(client),
           client,
           organization
         )
@@ -28,14 +28,10 @@ export const organizationResolvers = {
     async organization(
       _: Root,
       args: { slug: Slug },
-      { loaderFactories: { organizationBySlugLoaderFactory, organizationLoaderFactory } }: Context
+      { loaderFactories: { organizationLoaderFactory } }: Context
     ): Promise<Maybe<OrganizationRecord>> {
       return transaction(async client => {
-        return getOrganizationBySlug(
-          organizationBySlugLoaderFactory.getLoader(client),
-          organizationLoaderFactory.getLoader(client),
-          args.slug
-        )
+        return getOrganizationBySlug(organizationLoaderFactory.getLoaders(client), args.slug)
       })
     }
   }

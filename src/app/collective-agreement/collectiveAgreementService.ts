@@ -2,8 +2,8 @@ import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 
 import { Maybe } from '@app/common/types'
-import { CollectiveAgreementByKSUIDLoader } from './collectiveAgreementByKsuidLoader'
 import { getAllCollectiveAgreementRecords } from './collectiveAgreementRepository'
+import { CollectiveAgreementByKSUIDLoader } from './loader/types'
 import { CollectiveAgreementRecord } from './types'
 
 export async function getCollectiveAgreement(

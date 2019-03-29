@@ -8,7 +8,9 @@ export type Country = string
 
 export type Phone = string
 
-export type Email = string
+export interface Email extends String {
+  _email: never
+}
 
 export interface AddressRecord
   extends Readonly<{

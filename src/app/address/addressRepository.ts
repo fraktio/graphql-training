@@ -74,3 +74,26 @@ export async function addAddressRecord(
 
   return tryGetAddressRecord(client, insertResult.rows[0].id)
 }
+
+export async function editAddressRecord(
+  client: PoolClient,
+  address: AddressRecord,
+  input: AddressInput
+): Promise<AddressRecord> {
+  const { streetAddress, postalCode, municipality, country } = input
+
+  await client.query(
+    SQL`
+      UPDATE address
+      SET
+        street_address = ${streetAddress},
+        postal_code = ${postalCode},
+        municipality = ${municipality},
+        country = ${country}
+      WHERE
+        id = ${address.id}
+    `
+  )
+
+  return tryGetAddressRecord(client, address.id)
+}

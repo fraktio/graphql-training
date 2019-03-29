@@ -129,14 +129,14 @@ export async function getEmploymentRecordsByProviderPerson(
   client: PoolClient,
   providerPerson: ProviderPersonRecord
 ): Promise<EmploymentRecord[]> {
-  const { provider, person } = providerPerson
+  const { providerId, personId } = providerPerson
 
   const result = await client.query(
     SQL`
       SELECT * FROM employment
       WHERE
-        provider_id = ${provider.id}
-        AND person_id = ${person.id}
+        provider_id = ${providerId}
+        AND person_id = ${personId}
     `
   )
 

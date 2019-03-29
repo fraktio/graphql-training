@@ -24,7 +24,7 @@ export interface PersonRecord
   extends Readonly<{
     id: ID
     ksuid: KSUID
-    userAccountId: ID
+    userId: ID
     addressId: ID
     firstName: string
     lastName: string
@@ -47,6 +47,7 @@ export interface AddPersonInput
   extends Readonly<{
     providerKsuid: KSUID
     person: PersonInput
+    personEmployment: PersonEmploymentInput
   }> {}
 
 interface PersonInput
@@ -66,11 +67,17 @@ interface PersonInput
     preferredWorkingAreas: string[]
     languages: Language[]
     limitations: Maybe<string>
-    personEmployment: PersonEmploymentInput
   }> {}
 
 interface PersonEmploymentInput
   extends Readonly<{
     collectiveAgreementKsuid: KSUID
     employment: EmploymentInput
+  }> {}
+
+export interface EditPersonInput
+  extends Readonly<{
+    ksuid: KSUID
+    providerKsuid: KSUID
+    person: PersonInput
   }> {}

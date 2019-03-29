@@ -2,34 +2,34 @@ import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
-import { addAddressRecord } from '@app/address/addressRepository'
+import {
+  addAddressRecord,
+  editAddressRecord,
+  tryGetAddressRecord
+} from '@app/address/addressRepository'
 import { CollectiveAgreementRecord } from '@app/collective-agreement/types'
-import { ID, Maybe } from '@app/common/types'
+import { toFailure, toSuccess } from '@app/common'
+import { ID, Maybe, Try } from '@app/common/types'
 import { addEmploymentRecord } from '@app/employment/employmentRepository'
-import { AddPersonInput, Language, PersonRecord, UILanguage } from '@app/person/types'
+import {
+  AddPersonInput,
+  EditPersonInput,
+  Language,
+  PersonRecord,
+  UILanguage
+} from '@app/person/types'
 import { ProviderRecord } from '@app/provider/types'
-import { addUserRecordForPerson } from '@app/user/userRepository'
+import { addUserRecordForPerson, editUserRecord, tryGetUserRecord } from '@app/user/userRepository'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
 import { asId } from '@app/validation'
 
-export async function getAllPersonRecords(client: PoolClient): Promise<PersonRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM person`)
+export async function getPersonRecords(client: PoolClient, ids: ID[]): Promise<PersonRecord[]> {
+  const result = await client.query(SQL`SELECT * FROM person WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getPersonRecords(
-  client: PoolClient,
-  ksuids: KSUID[]
-): Promise<PersonRecord[]> {
-  const result = await client.query(
-    SQL`SELECT * FROM person WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
-  )
-
-  return result.rows.map(row => toRecord(row))
-}
-
-export async function getPersonRecord(
+export async function getPersonRecordByKsuid(
   client: PoolClient,
   ksuid: KSUID
 ): Promise<Maybe<PersonRecord>> {
@@ -71,7 +71,7 @@ interface PersonRow
     languages: string
     limitations: Maybe<string>
     preferred_working_areas: string[]
-    desired_salary: Maybe<number>
+    desired_salary: Maybe<string>
     created_at: Date
     modified_at: Maybe<Date>
   }> {}
@@ -104,7 +104,7 @@ function toRecord(row: PersonRow): PersonRecord {
     addressId: asId(address_id),
     bankAccountIsShared: bank_account_is_shared,
     bic,
-    desiredSalary: desired_salary,
+    desiredSalary: desired_salary == null ? null : parseFloat(desired_salary),
     firstName: first_name,
     iban,
     id: asId(id),
@@ -122,7 +122,7 @@ function toRecord(row: PersonRow): PersonRecord {
       modifiedAt: modified_at
     },
     uiLanguage: ui_language,
-    userAccountId: asId(user_account_id)
+    userId: asId(user_account_id)
   }
 }
 
@@ -137,7 +137,7 @@ export async function addPersonRecord(
   input: AddPersonInput,
   provider: ProviderRecord,
   collectiveAgreement: CollectiveAgreementRecord
-): Promise<PersonRecord | UniqueConstraintViolationError> {
+): Promise<Try<PersonRecord, UniqueConstraintViolationError>> {
   const {
     person: {
       firstName,
@@ -154,15 +154,15 @@ export async function addPersonRecord(
       bankAccountIsShared,
       bic,
       desiredSalary,
-      preferredWorkingAreas,
-      personEmployment: { employment }
-    }
+      preferredWorkingAreas
+    },
+    personEmployment: { employment }
   } = input
 
-  const user = await addUserRecordForPerson(client, email)
+  const userResult = await addUserRecordForPerson(client, email)
 
-  if (user instanceof UniqueConstraintViolationError) {
-    return user
+  if (!userResult.success) {
+    return userResult
   }
 
   const personAddress = await addAddressRecord(client, address)
@@ -193,7 +193,7 @@ export async function addPersonRecord(
             desired_salary
           ) VALUES (
             ${ksuid.string},
-            ${user.id},
+            ${userResult.value.id},
             ${personAddress.id},
             ${firstName},
             ${lastName},
@@ -219,12 +219,12 @@ export async function addPersonRecord(
   )
 
   if (person instanceof UniqueConstraintViolationError) {
-    return person
+    return toFailure(person)
   }
 
   await addEmploymentRecord(client, employment, person, provider, collectiveAgreement)
 
-  return person
+  return toSuccess(person)
 }
 
 export async function getPersonRecordsByProvider(
@@ -241,4 +241,77 @@ export async function getPersonRecordsByProvider(
   )
 
   return result.rows.map(row => toRecord(row))
+}
+
+export async function editPersonRecord(
+  client: PoolClient,
+  person: PersonRecord,
+  input: EditPersonInput
+): Promise<Try<PersonRecord, UniqueConstraintViolationError>> {
+  const {
+    person: {
+      firstName,
+      lastName,
+      nickName,
+      personalIdentityCode,
+      nationality,
+      phone,
+      email,
+      address,
+      iban,
+      limitations,
+      languages,
+      bankAccountIsShared,
+      bic,
+      desiredSalary,
+      preferredWorkingAreas
+    }
+  } = input
+
+  const existingUser = await tryGetUserRecord(client, person.userId)
+
+  const editedUser = await editUserRecord(client, existingUser, email)
+
+  if (!editedUser.success) {
+    return editedUser
+  }
+
+  const editedPerson = await withUniqueConstraintHandling(
+    async () => {
+      await client.query(
+        SQL`
+          UPDATE person
+          SET
+            first_name = ${firstName},
+            last_name = ${lastName},
+            nick_name = ${nickName},
+            personal_identity_code = ${personalIdentityCode},
+            nationality = ${nationality},
+            phone = ${phone},
+            iban = ${iban},
+            bic = ${bic},
+            bank_account_is_shared = ${bankAccountIsShared},
+            languages = ${languages},
+            limitations = ${limitations},
+            preferred_working_areas = ${preferredWorkingAreas},
+            desired_salary = ${desiredSalary}
+          WHERE
+            id = ${person.id}
+        `
+      )
+
+      return tryGetPersonRecord(client, person.id)
+    },
+    error => (/personal_identity_code/.test(error) ? 'personalIdentityCode' : 'phone')
+  )
+
+  if (editedPerson instanceof UniqueConstraintViolationError) {
+    return toFailure(editedPerson)
+  }
+
+  const existingAddress = await tryGetAddressRecord(client, person.addressId)
+
+  await editAddressRecord(client, existingAddress, address)
+
+  return toSuccess(editedPerson)
 }

@@ -1,13 +1,19 @@
+import KSUID from 'ksuid'
+
 import { Maybe, Slug } from '@app/common/types'
 import { getEmploymentsByProviderPerson } from '@app/employment/employmentService'
 import { EmploymentRecord } from '@app/employment/types'
 import { Context } from '@app/graphql/types'
-import { getPersonsByProvider } from '@app/person/personService'
+import { tryGetOrganizationByProvider } from '@app/organization/organizationService'
+import { OrganizationRecord } from '@app/organization/types'
+import { getPersonsByProvider, tryGetPersonByProviderPerson } from '@app/person/personService'
+import { PersonRecord } from '@app/person/types'
+import {
+  getProviderBySlugs,
+  getProviderPersonBySlugsAndPersonKsuid
+} from '@app/provider/providerService'
 import { ProviderPersonRecord, ProviderRecord } from '@app/provider/types'
 import { transaction } from '@app/util/database'
-import { tryGetOrganizationByProvider } from '@src/app/organization/organizationService'
-import { OrganizationRecord } from '@src/app/organization/types'
-import { getProviderByOrganizationSlugAndProviderSlug } from '@src/app/provider/providerService'
 import { Root } from './types'
 
 interface ProviderArgs {
@@ -15,21 +21,27 @@ interface ProviderArgs {
   providerSlug: Slug
 }
 
+interface ProviderPersonArgs {
+  organizationSlug: Slug
+  providerSlug: Slug
+  personKsuid: KSUID
+}
+
 export const providerResolvers = {
   Provider: {
     async providerPersons(
       provider: ProviderRecord,
       _: {},
-      { loaderFactories: { personByKsuidLoaderFactory } }: Context
+      { loaderFactories: { personLoaderFactory } }: Context
     ): Promise<ProviderPersonRecord[]> {
       return transaction(async client => {
         return (await getPersonsByProvider(
-          personByKsuidLoaderFactory.getLoader(client),
+          personLoaderFactory.getLoaders(client),
           client,
           provider
         )).map(person => ({
-          person,
-          provider
+          personId: person.id,
+          providerId: provider.id
         }))
       })
     },
@@ -40,20 +52,33 @@ export const providerResolvers = {
       { loaderFactories: { organizationLoaderFactory } }: Context
     ): Promise<OrganizationRecord> {
       return transaction(async client => {
-        return tryGetOrganizationByProvider(organizationLoaderFactory.getLoader(client), provider)
+        return tryGetOrganizationByProvider(
+          organizationLoaderFactory.getLoaders(client).organizationLoader,
+          provider
+        )
       })
     }
   },
 
   ProviderPerson: {
+    async person(
+      providerPerson: ProviderPersonRecord,
+      _: {},
+      { loaderFactories: { personLoaderFactory } }: Context
+    ): Promise<PersonRecord> {
+      return transaction(async client => {
+        return tryGetPersonByProviderPerson(personLoaderFactory.getLoaders(client), providerPerson)
+      })
+    },
+
     async employments(
       providerPerson: ProviderPersonRecord,
       _: {},
-      { loaderFactories: { employmentByKsuidLoaderFactory } }: Context
+      { loaderFactories: { employmentLoaderFactory } }: Context
     ): Promise<EmploymentRecord[]> {
       return transaction(async client => {
         return getEmploymentsByProviderPerson(
-          employmentByKsuidLoaderFactory.getLoader(client),
+          employmentLoaderFactory.getLoaders(client),
           client,
           providerPerson
         )
@@ -65,14 +90,25 @@ export const providerResolvers = {
     async provider(
       _: Root,
       args: ProviderArgs,
-      { loaderFactories: { providerByKsuidLoaderFactory } }: Context
+      { loaderFactories: { providerLoaderFactory } }: Context
     ): Promise<Maybe<ProviderRecord>> {
       return transaction(async client => {
-        return getProviderByOrganizationSlugAndProviderSlug(
-          providerByKsuidLoaderFactory.getLoader(client),
+        return getProviderBySlugs(
+          providerLoaderFactory.getLoaders(client),
           client,
           args.organizationSlug,
           args.providerSlug
+        )
+      })
+    },
+
+    async providerPerson(_: Root, args: ProviderPersonArgs): Promise<Maybe<ProviderPersonRecord>> {
+      return transaction(async client => {
+        return getProviderPersonBySlugsAndPersonKsuid(
+          client,
+          args.organizationSlug,
+          args.providerSlug,
+          args.personKsuid
         )
       })
     }

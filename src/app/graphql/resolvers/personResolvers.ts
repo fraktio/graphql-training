@@ -1,15 +1,17 @@
 import { tryGetAddress } from '@app/address/addressService'
 import { AddressRecord, Email } from '@app/address/types'
 import { getCollectiveAgreement } from '@app/collective-agreement/collectiveAgreementService'
-import { Maybe } from '@app/common/types'
 import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
 import { Context, NotFoundError } from '@app/graphql/types'
-import { addPerson, getAllPersons, getPerson } from '@app/person/personService'
-import { AddPersonInput, PersonRecord } from '@app/person/types'
-import { getProvider } from '@app/provider/providerService'
+import { addPerson, editPerson, tryGetPerson } from '@app/person/personService'
+import { AddPersonInput, EditPersonInput, PersonRecord } from '@app/person/types'
+import {
+  getProviderByKsuid,
+  getProviderPersonByProviderKsuidAndPersonKsuid
+} from '@app/provider/providerService'
 import { tryGetUser } from '@app/user/userService'
-import { transaction, UniqueConstraintViolationError } from '@app/util/database'
-import { KSUIDArgs, Root } from './types'
+import { transaction } from '@app/util/database'
+import { Root } from './types'
 
 export interface AddPersonArgs
   extends Readonly<{
@@ -24,6 +26,19 @@ interface AddPersonSuccess
     success: true
   }> {}
 
+export type EditPersonOutput = EditPersonSuccess | ValidationErrors
+
+interface EditPersonSuccess
+  extends Readonly<{
+    person: PersonRecord
+    success: true
+  }> {}
+
+export interface EditPersonArgs
+  extends Readonly<{
+    input: EditPersonInput
+  }> {}
+
 export const personResolvers = {
   Person: {
     async email(
@@ -32,7 +47,7 @@ export const personResolvers = {
       { loaderFactories: { userLoaderFactory } }: Context
     ): Promise<Email> {
       return transaction(async client => {
-        const user = await tryGetUser(userLoaderFactory.getLoader(client), person.userAccountId)
+        const user = await tryGetUser(userLoaderFactory.getLoaders(client), person.userId)
 
         return user.email
       })
@@ -44,7 +59,7 @@ export const personResolvers = {
       { loaderFactories: { addressLoaderFactory } }: Context
     ): Promise<AddressRecord> {
       return transaction(async client => {
-        return tryGetAddress(addressLoaderFactory.getLoader(client), person.addressId)
+        return tryGetAddress(addressLoaderFactory.getLoaders(client), person.addressId)
       })
     }
   },
@@ -55,25 +70,9 @@ export const personResolvers = {
     }
   },
 
-  Query: {
-    async persons(
-      _0: Root,
-      _1: {},
-      { loaderFactories: { personByKsuidLoaderFactory } }: Context
-    ): Promise<PersonRecord[]> {
-      return transaction(async client => {
-        return getAllPersons(personByKsuidLoaderFactory.getLoader(client), client)
-      })
-    },
-
-    async person(
-      _: Root,
-      args: KSUIDArgs,
-      { loaderFactories: { personByKsuidLoaderFactory } }: Context
-    ): Promise<Maybe<PersonRecord>> {
-      return transaction(async client => {
-        return getPerson(personByKsuidLoaderFactory.getLoader(client), args.ksuid)
-      })
+  EditPersonOutput: {
+    __resolveType(editPersonOutput: EditPersonOutput): string {
+      return editPersonOutput.success ? 'EditPersonSuccess' : 'ValidationErrors'
     }
   },
 
@@ -81,14 +80,17 @@ export const personResolvers = {
     async addPerson(
       _: Root,
       { input }: AddPersonArgs,
-      {
-        loaderFactories: { providerByKsuidLoaderFactory, collectiveAgreementByKsuidLoaderFactory }
-      }: Context
+      { loaderFactories: { providerLoaderFactory, collectiveAgreementLoaderFactory } }: Context
     ): Promise<AddPersonOutput> {
       return transaction(async client => {
-        const provider = await getProvider(
-          providerByKsuidLoaderFactory.getLoader(client),
-          input.providerKsuid
+        const {
+          providerKsuid,
+          personEmployment: { collectiveAgreementKsuid }
+        } = input
+
+        const provider = await getProviderByKsuid(
+          providerLoaderFactory.getLoaders(client).providerByKsuidLoader,
+          providerKsuid
         )
 
         if (!provider) {
@@ -96,8 +98,8 @@ export const personResolvers = {
         }
 
         const collectiveAgreement = await getCollectiveAgreement(
-          collectiveAgreementByKsuidLoaderFactory.getLoader(client),
-          input.person.personEmployment.collectiveAgreementKsuid
+          collectiveAgreementLoaderFactory.getLoaders(client),
+          collectiveAgreementKsuid
         )
 
         if (!collectiveAgreement) {
@@ -106,20 +108,70 @@ export const personResolvers = {
 
         const result = await addPerson(client, input, provider, collectiveAgreement)
 
-        if (result instanceof UniqueConstraintViolationError) {
+        if (result.success) {
+          return {
+            person: result.value,
+            success: true as true
+          }
+        } else {
           return {
             success: false as false,
             validationErrors: [
               {
                 code: ValidationErrorCode.UNIQUE_CONSTRAINT_VIOLATION,
-                field: result.field
+                field: result.error.field
               }
             ]
           }
+        }
+      })
+    },
+
+    async editPerson(
+      _: Root,
+      { input }: EditPersonArgs,
+      { loaderFactories: { personLoaderFactory, addressLoaderFactory, userLoaderFactory } }: Context
+    ): Promise<EditPersonOutput> {
+      return transaction(async client => {
+        const { ksuid, providerKsuid } = input
+
+        const providerPerson = await getProviderPersonByProviderKsuidAndPersonKsuid(
+          client,
+          providerKsuid,
+          ksuid
+        )
+
+        if (!providerPerson) {
+          throw new NotFoundError('ProviderPerson was not found')
+        }
+
+        const personLoader = personLoaderFactory.getLoaders(client)
+
+        const person = await tryGetPerson(personLoader, providerPerson.personId)
+
+        const result = await editPerson(
+          personLoader,
+          addressLoaderFactory.getLoaders(client),
+          userLoaderFactory.getLoaders(client),
+          client,
+          person,
+          input
+        )
+
+        if (result.success) {
+          return {
+            person: result.value,
+            success: true as true
+          }
         } else {
           return {
-            person: result,
-            success: true as true
+            success: false as false,
+            validationErrors: [
+              {
+                code: ValidationErrorCode.UNIQUE_CONSTRAINT_VIOLATION,
+                field: result.error.field
+              }
+            ]
           }
         }
       })

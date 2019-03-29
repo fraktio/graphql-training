@@ -9,6 +9,7 @@ import { KsuidOutput, ScalarType } from '@app/graphql/resolvers/types'
 import { createLoaderFactories } from '@app/loader'
 import { Language, Nationality, PersonalIdentityCode } from '@app/person/types'
 import { transaction } from '@app/util/database'
+import { asEmail } from '@app/validation'
 import {
   aCollectiveAgreement,
   anEmployment,
@@ -141,7 +142,7 @@ interface Employment
     description: Maybe<string>
   }> {}
 
-describe('provider person', () => {
+describe('provider person add', () => {
   it('adds a person and gets it from provider', async done => {
     asyncTest(done, async () => {
       const [organization, provider, collectiveAgreement] = await transaction(async client => {
@@ -175,26 +176,26 @@ describe('provider person', () => {
           limitations: null,
           nationality: 'FIN',
           nickName: null,
-          personEmployment: {
-            collectiveAgreementKsuid: {
-              type: ScalarType.KSUID,
-              value: collectiveAgreement.ksuid.string
-            },
-            employment: {
-              endDate: {
-                type: 'DATE',
-                value: '2019-03-01'
-              },
-              startDate: {
-                type: 'DATE',
-                value: '2019-01-01'
-              },
-              type: EmploymentType.INDEFINITE_PART_TIME
-            }
-          },
           personalIdentityCode: '181193-686L',
           phone: '+358401234567',
           preferredWorkingAreas: []
+        },
+        personEmployment: {
+          collectiveAgreementKsuid: {
+            type: ScalarType.KSUID,
+            value: collectiveAgreement.ksuid.string
+          },
+          employment: {
+            endDate: {
+              type: 'DATE',
+              value: '2019-03-01'
+            },
+            startDate: {
+              type: 'DATE',
+              value: '2019-01-01'
+            },
+            type: EmploymentType.INDEFINITE_PART_TIME
+          }
         },
         providerKsuid: {
           type: ScalarType.KSUID,
@@ -234,7 +235,7 @@ describe('provider person', () => {
         bankAccountIsShared: false,
         bic: null,
         desiredSalary: null,
-        email: 'foo@bar.com',
+        email: asEmail('foo@bar.com'),
         firstName: 'First',
         iban: null,
         ksuid: addPersonResponse.addPerson.person.ksuid,

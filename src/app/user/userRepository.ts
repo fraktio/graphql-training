@@ -2,10 +2,12 @@ import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
-import { ID, Maybe } from '@app/common/types'
+import { Email } from '@app/address/types'
+import { toFailure, toSuccess } from '@app/common'
+import { ID, Maybe, Try } from '@app/common/types'
 import { UserRecord } from '@app/user/types'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
-import { asId } from '@app/validation'
+import { asEmail, asId } from '@app/validation'
 
 export async function getUserRecords(client: PoolClient, ids: ID[]): Promise<UserRecord[]> {
   const result = await client.query(SQL`SELECT * FROM user_account WHERE id = ANY (${ids})`)
@@ -42,21 +44,21 @@ function toRecord(row: UserRow): UserRecord {
   const { id, email } = row
 
   return {
-    email,
+    email: asEmail(email),
     id: asId(id)
   }
 }
 
 export async function addUserRecordForPerson(
   client: PoolClient,
-  email: string
-): Promise<UserRecord | UniqueConstraintViolationError> {
+  email: Email
+): Promise<Try<UserRecord, UniqueConstraintViolationError>> {
   // password is foobar
   const password = '$2a$12$aGpBRIHl0DZlsCn5.z2N4O4L/iDGU.inT4iApLUWrHATBtUikdNqC'
 
   const ksuid = await KSUID.random()
 
-  return withUniqueConstraintHandling(
+  const result = await withUniqueConstraintHandling(
     async () => {
       const insertResult = await client.query(
         SQL`
@@ -76,4 +78,39 @@ export async function addUserRecordForPerson(
     },
     () => 'email'
   )
+
+  if (result instanceof UniqueConstraintViolationError) {
+    return toFailure(result)
+  }
+
+  return toSuccess(result)
+}
+
+export async function editUserRecord(
+  client: PoolClient,
+  user: UserRecord,
+  email: Email
+): Promise<Try<UserRecord, UniqueConstraintViolationError>> {
+  const result = await withUniqueConstraintHandling(
+    async () => {
+      await client.query(
+        SQL`
+          UPDATE user_account
+          SET
+            email = ${email}
+          WHERE
+            id = ${user.id}
+        `
+      )
+
+      return tryGetUserRecord(client, user.id)
+    },
+    () => 'email'
+  )
+
+  if (result instanceof UniqueConstraintViolationError) {
+    return toFailure(result)
+  }
+
+  return toSuccess(result)
 }

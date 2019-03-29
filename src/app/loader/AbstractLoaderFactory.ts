@@ -2,16 +2,16 @@ import { PoolClient } from 'pg'
 
 import { Maybe } from '@app/common/types'
 
-export abstract class AbstractLoaderFactory<Loader> {
-  private loader: Maybe<Loader> = null
+export abstract class AbstractLoaderFactory<Loaders> {
+  private loaders: Maybe<Loaders> = null
 
-  public getLoader(client: PoolClient): Loader {
-    if (!this.loader) {
-      this.loader = this.createLoader(client)
+  public getLoaders(client: PoolClient): Loaders {
+    if (!this.loaders) {
+      this.loaders = this.createLoaders(client)
     }
 
-    return this.loader
+    return this.loaders
   }
 
-  protected abstract createLoader(client: PoolClient): Loader
+  protected abstract createLoaders(client: PoolClient): Loaders
 }

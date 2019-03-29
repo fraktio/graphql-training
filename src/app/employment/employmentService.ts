@@ -1,8 +1,8 @@
 import { PoolClient } from 'pg'
 
 import { ProviderPersonRecord } from '@app/provider/types'
-import { EmploymentByKSUIDLoader } from './employmentByKsuidLoader'
 import { getEmploymentRecordsByProviderPerson } from './employmentRepository'
+import { EmploymentByKSUIDLoader } from './loader/types'
 import { EmploymentRecord } from './types'
 
 export async function getEmploymentsByProviderPerson(

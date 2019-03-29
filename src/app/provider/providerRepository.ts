@@ -5,9 +5,15 @@ import SQL from 'sql-template-strings'
 import { ID, Maybe, Slug } from '@app/common/types'
 import { OrganizationRecord } from '@app/organization/types'
 import { asBusinessID, asId, asSlug } from '@app/validation'
-import { ProviderRecord } from './types'
+import { ProviderPersonRecord, ProviderRecord } from './types'
 
-export async function getProviderRecords(
+export async function getProviderRecords(client: PoolClient, ids: ID[]): Promise<ProviderRecord[]> {
+  const result = await client.query(SQL`SELECT * FROM provider WHERE id = ANY (${ids})`)
+
+  return result.rows.map(row => toRecord(row))
+}
+
+export async function getProviderRecordsByKsuids(
   client: PoolClient,
   ksuids: KSUID[]
 ): Promise<ProviderRecord[]> {
@@ -18,7 +24,7 @@ export async function getProviderRecords(
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getProviderRecord(
+export async function getProviderRecordByKsuid(
   client: PoolClient,
   ksuid: KSUID
 ): Promise<Maybe<ProviderRecord>> {
@@ -97,7 +103,7 @@ export async function getProviderRecordsByOrganization(
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getProviderRecordByOrganizationSlugAndProviderSlug(
+export async function getProviderRecordBySlugs(
   client: PoolClient,
   organizationSlug: Slug,
   providerSlug: Slug
@@ -115,4 +121,69 @@ export async function getProviderRecordByOrganizationSlugAndProviderSlug(
   const row = result.rows[0]
 
   return row ? toRecord(row) : null
+}
+
+export async function getProviderPersonRecordBySlugsAndPersonKsuid(
+  client: PoolClient,
+  organizationSlug: Slug,
+  providerSlug: Slug,
+  personKsuid: KSUID
+): Promise<Maybe<ProviderPersonRecord>> {
+  const result = await client.query(
+    SQL`
+      SELECT DISTINCT
+        pr.id AS provider_id,
+        pe.id AS person_id
+      FROM provider pr
+      INNER JOIN organization o ON pr.organization_id = o.id
+      INNER JOIN employment e ON e.provider_id = pr.id
+      INNER JOIN person pe ON pe.id = e.person_id
+      WHERE
+        pr.slug = ${providerSlug}
+        AND o.slug = ${organizationSlug}
+        AND pe.ksuid = ${personKsuid.string}
+    `
+  )
+
+  const row = result.rows[0]
+
+  return row ? toProviderPersonRecord(row) : null
+}
+
+interface ProviderPersonRow {
+  person_id: number
+  provider_id: number
+}
+
+function toProviderPersonRecord(row: ProviderPersonRow): ProviderPersonRecord {
+  const { person_id, provider_id } = row
+
+  return {
+    personId: asId(person_id),
+    providerId: asId(provider_id)
+  }
+}
+
+export async function getProviderPersonRecordByProviderKsuidAndPersonKsuid(
+  client: PoolClient,
+  providerKsuid: KSUID,
+  personKsuid: KSUID
+): Promise<Maybe<ProviderPersonRecord>> {
+  const result = await client.query(
+    SQL`
+      SELECT DISTINCT
+        pr.id AS provider_id,
+        pe.id AS person_id
+      FROM provider pr
+      INNER JOIN employment e ON e.provider_id = pr.id
+      INNER JOIN person pe ON pe.id = e.person_id
+      WHERE
+        pr.ksuid = ${providerKsuid.string}
+        AND pe.ksuid = ${personKsuid.string}
+    `
+  )
+
+  const row = result.rows[0]
+
+  return row ? toProviderPersonRecord(row) : null
 }

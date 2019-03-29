@@ -1,6 +1,6 @@
 import { ID } from '@app/common/types'
+import { UserLoader } from '@app/user/loader/types'
 import { UserRecord } from '@app/user/types'
-import { UserLoader } from '@app/user/userLoader'
 
 export async function tryGetUser(loader: UserLoader, id: ID): Promise<UserRecord> {
   const user = await loader.load(id)

@@ -1,18 +1,18 @@
 import { Maybe, Slug } from '@app/common/types'
 import { ProviderRecord } from '@app/provider/types'
-import { OrganizationBySlugLoader } from './organizationBySlugLoader'
-import { OrganizationLoader } from './organizationLoader'
+import { OrganizationLoader, OrganizationLoaders } from './loader/types'
 import { OrganizationRecord } from './types'
 
 export async function getOrganizationBySlug(
-  bySlugLoader: OrganizationBySlugLoader,
-  loader: OrganizationLoader,
+  loaders: OrganizationLoaders,
   slug: Slug
 ): Promise<Maybe<OrganizationRecord>> {
-  const organization = await bySlugLoader.load(slug)
+  const { organizationLoader, organizationBySlugLoader } = loaders
+
+  const organization = await organizationBySlugLoader.load(slug)
 
   if (organization) {
-    loader.prime(organization.id, organization)
+    organizationLoader.prime(organization.id, organization)
   }
 
   return organization

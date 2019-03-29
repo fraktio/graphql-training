@@ -9,11 +9,11 @@ export const collectiveAgreementResolvers = {
     async collectiveAgreements(
       _0: Root,
       _1: {},
-      { loaderFactories: { collectiveAgreementByKsuidLoaderFactory } }: Context
+      { loaderFactories: { collectiveAgreementLoaderFactory } }: Context
     ): Promise<CollectiveAgreementRecord[]> {
       return transaction(async client => {
         return getAllCollectiveAgreements(
-          collectiveAgreementByKsuidLoaderFactory.getLoader(client),
+          collectiveAgreementLoaderFactory.getLoaders(client),
           client
         )
       })

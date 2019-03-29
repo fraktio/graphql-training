@@ -1,18 +1,14 @@
 import DataLoader from 'dataloader'
-import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 
-import { Maybe } from '@app/common/types'
+import { getCollectiveAgreementRecords } from '@app/collective-agreement/collectiveAgreementRepository'
 import { AbstractLoaderFactory } from '@app/loader/AbstractLoaderFactory'
-import { getCollectiveAgreementRecords } from './collectiveAgreementRepository'
-import { CollectiveAgreementRecord } from './types'
+import { CollectiveAgreementByKSUIDLoader } from './types'
 
-export type CollectiveAgreementByKSUIDLoader = DataLoader<KSUID, Maybe<CollectiveAgreementRecord>>
-
-export class CollectiveAgreementByKSUIDLoaderFactory extends AbstractLoaderFactory<
+export class CollectiveAgreementLoaderFactory extends AbstractLoaderFactory<
   CollectiveAgreementByKSUIDLoader
 > {
-  protected createLoader(client: PoolClient): CollectiveAgreementByKSUIDLoader {
+  protected createLoaders(client: PoolClient): CollectiveAgreementByKSUIDLoader {
     return new DataLoader(async ksuids => {
       const collectiveAgreements = await getCollectiveAgreementRecords(client, ksuids)
 

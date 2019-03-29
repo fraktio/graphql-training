@@ -2,7 +2,6 @@ import KSUID from 'ksuid'
 
 import { BusinessID, ID, Slug } from '@app/common/types'
 import { Timestamp } from '@app/date/types'
-import { PersonRecord } from '@app/person/types'
 
 export interface ProviderRecord
   extends Readonly<{
@@ -18,6 +17,6 @@ export interface ProviderRecord
 
 export interface ProviderPersonRecord
   extends Readonly<{
-    provider: ProviderRecord
-    person: PersonRecord
+    providerId: ID
+    personId: ID
   }> {}

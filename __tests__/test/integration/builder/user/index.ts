@@ -5,9 +5,10 @@ import SQL from 'sql-template-strings'
 import { Email } from '@app/address/types'
 import { UserRecord } from '@app/user/types'
 import { tryGetUserRecord } from '@app/user/userRepository'
+import { asEmail } from '@app/validation'
 
 class UserBuilder {
-  private email: Email = 'test@user.com'
+  private email: Email = asEmail('test@user.com')
   private password: string = '$2y$12$6JA85AQYlkwIZQr2Gg4oJOY2LeCB1BKlGIwuooq4tZ6WGnmUfXDn2' // test
 
   constructor(private readonly client: PoolClient) {}

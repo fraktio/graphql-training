@@ -1,32 +1,29 @@
-import { AddressLoaderFactory } from '@app/address/addressLoader'
-import { OrganizationBySlugLoaderFactory } from '@app/organization/organizationBySlugLoader'
-import { OrganizationLoaderFactory } from '@app/organization/organizationLoader'
-import { UserLoaderFactory } from '@app/user/userLoader'
-import { CollectiveAgreementByKSUIDLoaderFactory } from '@src/app/collective-agreement/collectiveAgreementByKsuidLoader'
-import { EmploymentByKSUIDLoaderFactory } from '@src/app/employment/employmentByKsuidLoader'
-import { PersonByKSUIDLoaderFactory } from '@src/app/person/personByKsuidLoader'
-import { ProviderByKSUIDLoaderFactory } from '@src/app/provider/providerByKsuidLoader'
+import { AddressLoaderFactory } from '@app/address/loader'
+import { CollectiveAgreementLoaderFactory } from '@app/collective-agreement/loader'
+import { EmploymentLoaderFactory } from '@app/employment/loader'
+import { OrganizationLoaderFactory } from '@app/organization/loader'
+import { PersonLoaderFactory } from '@app/person/loader'
+import { ProviderLoaderFactory } from '@app/provider/loader'
+import { UserLoaderFactory } from '@app/user/loader'
 
 export interface LoaderFactories {
   addressLoaderFactory: AddressLoaderFactory
-  collectiveAgreementByKsuidLoaderFactory: CollectiveAgreementByKSUIDLoaderFactory
-  employmentByKsuidLoaderFactory: EmploymentByKSUIDLoaderFactory
-  organizationBySlugLoaderFactory: OrganizationBySlugLoaderFactory
+  collectiveAgreementLoaderFactory: CollectiveAgreementLoaderFactory
+  employmentLoaderFactory: EmploymentLoaderFactory
   organizationLoaderFactory: OrganizationLoaderFactory
-  personByKsuidLoaderFactory: PersonByKSUIDLoaderFactory
-  providerByKsuidLoaderFactory: ProviderByKSUIDLoaderFactory
+  personLoaderFactory: PersonLoaderFactory
+  providerLoaderFactory: ProviderLoaderFactory
   userLoaderFactory: UserLoaderFactory
 }
 
 export function createLoaderFactories(): LoaderFactories {
   return {
     addressLoaderFactory: new AddressLoaderFactory(),
-    collectiveAgreementByKsuidLoaderFactory: new CollectiveAgreementByKSUIDLoaderFactory(),
-    employmentByKsuidLoaderFactory: new EmploymentByKSUIDLoaderFactory(),
-    organizationBySlugLoaderFactory: new OrganizationBySlugLoaderFactory(),
+    collectiveAgreementLoaderFactory: new CollectiveAgreementLoaderFactory(),
+    employmentLoaderFactory: new EmploymentLoaderFactory(),
     organizationLoaderFactory: new OrganizationLoaderFactory(),
-    personByKsuidLoaderFactory: new PersonByKSUIDLoaderFactory(),
-    providerByKsuidLoaderFactory: new ProviderByKSUIDLoaderFactory(),
+    personLoaderFactory: new PersonLoaderFactory(),
+    providerLoaderFactory: new ProviderLoaderFactory(),
     userLoaderFactory: new UserLoaderFactory()
   }
 }
