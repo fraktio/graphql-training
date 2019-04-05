@@ -2,10 +2,34 @@ type Organization implements Node {
   ksuid: KSUID!
   slug: Slug!
   name: String!
+  businessId: BusinessID!
+  address: Address!
   timestamp: Timestamp!
   providers: [Provider!]!
 }
 
 type Query {
   organization(slug: Slug!): Organization
+}
+
+type Mutation {
+  editOrganization(input: EditOrganizationInput!): EditOrganizationOutput!
+}
+
+input EditOrganizationInput {
+  ksuid: KSUID!
+  organization: OrganizationInput!
+}
+
+input OrganizationInput {
+  name: String!
+  businessId: BusinessID!
+  slug: Slug!
+  address: AddressInput!
+}
+
+union EditOrganizationOutput = EditOrganizationSuccess | ValidationErrors
+
+type EditOrganizationSuccess {
+  organization: Organization!
 }

@@ -2,9 +2,12 @@ import KSUID from 'ksuid'
 import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
-import { ID, Maybe, Slug } from '@app/common/types'
+import { editAddressRecord, tryGetAddressRecord } from '@app/address/addressRepository'
+import { toFailure, toSuccess } from '@app/common'
+import { ID, Maybe, Slug, Try } from '@app/common/types'
+import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
 import { asBusinessId, asId, asSlug } from '@app/validation'
-import { OrganizationRecord } from './types'
+import { EditOrganizationInput, OrganizationRecord } from './types'
 
 export async function getOrganizationRecords(
   client: PoolClient,
@@ -39,6 +42,17 @@ export async function getOrganizationRecordsBySlugs(
   return result.rows.map(row => toRecord(row))
 }
 
+export async function getOrganizationRecordsByKsuids(
+  client: PoolClient,
+  ksuids: KSUID[]
+): Promise<OrganizationRecord[]> {
+  const result = await client.query(
+    SQL`SELECT * FROM organization WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
+  )
+
+  return result.rows.map(row => toRecord(row))
+}
+
 interface OrganizationRow
   extends Readonly<{
     id: number
@@ -66,4 +80,43 @@ function toRecord(row: OrganizationRow): OrganizationRecord {
       modifiedAt: modified_at
     }
   }
+}
+
+export async function editOrganizationRecord(
+  client: PoolClient,
+  organization: OrganizationRecord,
+  input: EditOrganizationInput
+): Promise<Try<OrganizationRecord, UniqueConstraintViolationError>> {
+  const {
+    organization: { businessId, name, slug, address }
+  } = input
+
+  const organizationResult = await withUniqueConstraintHandling(
+    async () => {
+      await client.query(
+        SQL`
+          UPDATE organization
+          SET
+            business_id = ${businessId},
+            name = ${name},
+            slug = ${slug}
+          WHERE
+            id = ${organization.id}
+        `
+      )
+
+      return tryGetOrganizationRecord(client, organization.id)
+    },
+    error => (/business_id/.test(error) ? 'businessId' : 'slug')
+  )
+
+  if (organizationResult instanceof UniqueConstraintViolationError) {
+    return toFailure(organizationResult)
+  }
+
+  const existingAddress = await tryGetAddressRecord(client, organization.addressId)
+
+  await editAddressRecord(client, existingAddress, address)
+
+  return toSuccess(organizationResult)
 }

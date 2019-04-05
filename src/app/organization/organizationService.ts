@@ -1,21 +1,24 @@
-import { Maybe, Slug } from '@app/common/types'
+import KSUID from 'ksuid'
+import { PoolClient } from 'pg'
+
+import { AddressLoader } from '@app/address/loader/types'
+import { Maybe, Slug, Try } from '@app/common/types'
 import { ProviderRecord } from '@app/provider/types'
-import { OrganizationLoader, OrganizationLoaders } from './loader/types'
-import { OrganizationRecord } from './types'
+import { UniqueConstraintViolationError } from '@app/util/database'
+import {
+  OrganizationByKSUIDLoader,
+  OrganizationBySlugLoader,
+  OrganizationLoader,
+  OrganizationLoaders
+} from './loader/types'
+import { editOrganizationRecord } from './organizationRepository'
+import { EditOrganizationInput, OrganizationRecord } from './types'
 
 export async function getOrganizationBySlug(
-  loaders: OrganizationLoaders,
+  organizationBySlugLoader: OrganizationBySlugLoader,
   slug: Slug
 ): Promise<Maybe<OrganizationRecord>> {
-  const { organizationLoader, organizationBySlugLoader } = loaders
-
-  const organization = await organizationBySlugLoader.load(slug)
-
-  if (organization) {
-    organizationLoader.prime(organization.id, organization)
-  }
-
-  return organization
+  return organizationBySlugLoader.load(slug)
 }
 
 export async function tryGetOrganizationByProvider(
@@ -29,4 +32,41 @@ export async function tryGetOrganizationByProvider(
   }
 
   return organization
+}
+
+export async function getOrganizationByKsuid(
+  organizationByKsuidLoader: OrganizationByKSUIDLoader,
+  ksuid: KSUID
+): Promise<Maybe<OrganizationRecord>> {
+  return organizationByKsuidLoader.load(ksuid)
+}
+
+export async function editOrganization(
+  loaders: OrganizationLoaders,
+  addressLoader: AddressLoader,
+  client: PoolClient,
+  person: OrganizationRecord,
+  input: EditOrganizationInput
+): Promise<Try<OrganizationRecord, UniqueConstraintViolationError>> {
+  const result = await editOrganizationRecord(client, person, input)
+
+  if (result.success) {
+    const editedOrganization = result.value
+
+    const { organizationLoader, organizationByKsuidLoader, organizationBySlugLoader } = loaders
+
+    organizationLoader.clear(editedOrganization.id).prime(editedOrganization.id, editedOrganization)
+
+    organizationByKsuidLoader
+      .clear(editedOrganization.ksuid)
+      .prime(editedOrganization.ksuid, editedOrganization)
+
+    organizationBySlugLoader
+      .clear(editedOrganization.slug)
+      .prime(editedOrganization.slug, editedOrganization)
+
+    addressLoader.clear(editedOrganization.addressId)
+  }
+
+  return result
 }
