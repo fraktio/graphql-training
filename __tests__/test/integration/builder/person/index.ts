@@ -1,11 +1,11 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { CountryCode } from '@app/address/types'
 import { tryGetPersonRecord } from '@app/person/personRepository'
 import { Language, PersonalIdentityCode, PersonRecord } from '@app/person/types'
 import { UILanguage } from '@app/user/types'
+import { PoolConnection } from '@app/util/database/types'
 import { asPersonalIdentityCode } from '@app/validation'
 import { anAddress } from '@test/test/integration/builder/address'
 import { aUser } from '@test/test/integration/builder/user'
@@ -20,15 +20,15 @@ class PersonBuilder {
   private languages: Language[] = []
   private preferredWorkingAreas: string[] = []
 
-  constructor(private readonly client: PoolClient) {}
+  constructor(private readonly connection: PoolConnection) {}
 
   public async build(): Promise<PersonRecord> {
-    const user = await aUser(this.client).build()
-    const address = await anAddress(this.client).build()
+    const user = await aUser(this.connection).build()
+    const address = await anAddress(this.connection).build()
 
     const ksuid = await KSUID.random()
 
-    const insertResult = await this.client.query(
+    const insertResult = await this.connection.query(
       SQL`
         INSERT INTO person (
           ksuid,
@@ -58,10 +58,10 @@ class PersonBuilder {
       `
     )
 
-    return tryGetPersonRecord(this.client, insertResult.rows[0].id)
+    return tryGetPersonRecord(this.connection, insertResult.rows[0].id)
   }
 }
 
-export function aPerson(client: PoolClient): PersonBuilder {
-  return new PersonBuilder(client)
+export function aPerson(connection: PoolConnection): PersonBuilder {
+  return new PersonBuilder(connection)
 }

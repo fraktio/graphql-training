@@ -76,8 +76,8 @@ interface Address
 describe('organization edit', () => {
   it('edits an organization', async done => {
     asyncTest(done, async () => {
-      const organization = await transaction(async client => {
-        return anOrganization(client).build()
+      const organization = await transaction(async connection => {
+        return anOrganization(connection).build()
       })
 
       const input = {

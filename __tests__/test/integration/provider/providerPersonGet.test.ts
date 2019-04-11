@@ -43,16 +43,16 @@ interface Person
 describe('provider person get', () => {
   it('gets a provider person', async done => {
     asyncTest(done, async () => {
-      const [organization, provider, person] = await transaction(async client => {
-        const organizationRecord = await anOrganization(client).build()
+      const [organization, provider, person] = await transaction(async connection => {
+        const organizationRecord = await anOrganization(connection).build()
 
-        const providerRecord = await aProvider(client)
+        const providerRecord = await aProvider(connection)
           .withOrganization(organizationRecord)
           .build()
 
-        const personRecord = await aPerson(client).build()
+        const personRecord = await aPerson(connection).build()
 
-        await anEmployment(client)
+        await anEmployment(connection)
           .withProvider(providerRecord)
           .withPerson(personRecord)
           .build()

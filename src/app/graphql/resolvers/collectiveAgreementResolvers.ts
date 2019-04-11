@@ -11,10 +11,10 @@ export const collectiveAgreementResolvers = {
       _1: {},
       { loaderFactories: { collectiveAgreementLoaderFactory } }: Context
     ): Promise<CollectiveAgreementRecord[]> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return getAllCollectiveAgreements(
-          collectiveAgreementLoaderFactory.getLoaders(client),
-          client
+          collectiveAgreementLoaderFactory.getLoaders(connection),
+          connection
         )
       })
     }

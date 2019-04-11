@@ -1,5 +1,4 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { CollectiveAgreementRecord } from '@app/collective-agreement/types'
@@ -8,6 +7,7 @@ import { tryGetEmploymentRecord } from '@app/employment/employmentRepository'
 import { EmploymentRecord, EmploymentType } from '@app/employment/types'
 import { PersonRecord } from '@app/person/types'
 import { ProviderRecord } from '@app/provider/types'
+import { PoolConnection } from '@app/util/database/types'
 import { aCollectiveAgreement } from '@test/test/integration/builder/collective-agreement'
 import { aPerson } from '@test/test/integration/builder/person'
 import { aProvider } from '@test/test/integration/builder/provider'
@@ -19,7 +19,7 @@ class EmploymentBuilder {
   private collectiveAgreement: Maybe<CollectiveAgreementRecord> = null
   private type: EmploymentType = EmploymentType.GENERAL_TERMS
 
-  constructor(private readonly client: PoolClient) {}
+  constructor(private readonly connection: PoolConnection) {}
 
   public withPerson(person: PersonRecord): this {
     const c = clone(this)
@@ -46,14 +46,14 @@ class EmploymentBuilder {
   }
 
   public async build(): Promise<EmploymentRecord> {
-    const person = this.person || (await aPerson(this.client).build())
-    const provider = this.provider || (await aProvider(this.client).build())
+    const person = this.person || (await aPerson(this.connection).build())
+    const provider = this.provider || (await aProvider(this.connection).build())
     const collectiveAgreement =
-      this.collectiveAgreement || (await aCollectiveAgreement(this.client).build())
+      this.collectiveAgreement || (await aCollectiveAgreement(this.connection).build())
 
     const ksuid = await KSUID.random()
 
-    const insertResult = await this.client.query(
+    const insertResult = await this.connection.query(
       SQL`
         INSERT INTO employment (
           ksuid,
@@ -71,10 +71,10 @@ class EmploymentBuilder {
       `
     )
 
-    return tryGetEmploymentRecord(this.client, insertResult.rows[0].id)
+    return tryGetEmploymentRecord(this.connection, insertResult.rows[0].id)
   }
 }
 
-export function anEmployment(client: PoolClient): EmploymentBuilder {
-  return new EmploymentBuilder(client)
+export function anEmployment(connection: PoolConnection): EmploymentBuilder {
+  return new EmploymentBuilder(connection)
 }

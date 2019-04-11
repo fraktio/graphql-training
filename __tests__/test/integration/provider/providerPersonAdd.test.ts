@@ -171,14 +171,14 @@ interface Employment
 describe('provider person add', () => {
   it('adds a person and gets it from provider', async done => {
     asyncTest(done, async () => {
-      const [organization, provider, collectiveAgreement] = await transaction(async client => {
-        const organizationRecord = await anOrganization(client).build()
+      const [organization, provider, collectiveAgreement] = await transaction(async connection => {
+        const organizationRecord = await anOrganization(connection).build()
 
-        const providerRecord = await aProvider(client)
+        const providerRecord = await aProvider(connection)
           .withOrganization(organizationRecord)
           .build()
 
-        const collectiveAgreementRecord = await aCollectiveAgreement(client).build()
+        const collectiveAgreementRecord = await aCollectiveAgreement(connection).build()
 
         return Promise.all([organizationRecord, providerRecord, collectiveAgreementRecord])
       })
@@ -297,18 +297,18 @@ describe('provider person add', () => {
 
   it('does not duplicate persons with multiple employments', async done => {
     asyncTest(done, async () => {
-      const [organization, provider] = await transaction(async client => {
-        const organizationRecord = await anOrganization(client).build()
+      const [organization, provider] = await transaction(async connection => {
+        const organizationRecord = await anOrganization(connection).build()
 
-        const providerRecord = await aProvider(client)
+        const providerRecord = await aProvider(connection)
           .withOrganization(organizationRecord)
           .build()
 
-        const personRecord = await aPerson(client).build()
+        const personRecord = await aPerson(connection).build()
 
-        const collectiveAgreementRecord = await aCollectiveAgreement(client).build()
+        const collectiveAgreementRecord = await aCollectiveAgreement(connection).build()
 
-        const employmentBuilder = anEmployment(client)
+        const employmentBuilder = anEmployment(connection)
           .withProvider(providerRecord)
           .withPerson(personRecord)
           .withCollectiveAgreement(collectiveAgreementRecord)

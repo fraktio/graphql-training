@@ -1,14 +1,14 @@
 import DataLoader from 'dataloader'
-import { PoolClient } from 'pg'
 
 import { AbstractLoaderFactory } from '@app/loader/AbstractLoaderFactory'
 import { getProviderRecords, getProviderRecordsByKsuids } from '@app/provider/providerRepository'
+import { PoolConnection } from '@app/util/database/types'
 import { ProviderByKSUIDLoader, ProviderLoader, ProviderLoaders } from './types'
 
 export class ProviderLoaderFactory extends AbstractLoaderFactory<ProviderLoaders> {
-  protected createLoaders(client: PoolClient): ProviderLoaders {
+  protected createLoaders(connection: PoolConnection): ProviderLoaders {
     const providerLoader: ProviderLoader = new DataLoader(async ids => {
-      const providers = await getProviderRecords(client, ids)
+      const providers = await getProviderRecords(connection, ids)
 
       providers.forEach(provider => providerByKsuidLoader.prime(provider.ksuid, provider))
 
@@ -16,7 +16,7 @@ export class ProviderLoaderFactory extends AbstractLoaderFactory<ProviderLoaders
     })
 
     const providerByKsuidLoader: ProviderByKSUIDLoader = new DataLoader(async ksuids => {
-      const providers = await getProviderRecordsByKsuids(client, ksuids)
+      const providers = await getProviderRecordsByKsuids(connection, ksuids)
 
       providers.forEach(provider => providerLoader.prime(provider.id, provider))
 

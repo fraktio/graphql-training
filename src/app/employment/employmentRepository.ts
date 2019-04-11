@@ -1,19 +1,19 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { CollectiveAgreementRecord } from '@app/collective-agreement/types'
 import { ID, Maybe } from '@app/common/types'
 import { PersonRecord } from '@app/person/types'
 import { ProviderPersonRecord, ProviderRecord } from '@app/provider/types'
+import { PoolConnection } from '@app/util/database/types'
 import { asHour, asId } from '@app/validation'
 import { EmploymentInput, EmploymentRecord, EmploymentType } from './types'
 
 export async function getEmploymentRecords(
-  client: PoolClient,
+  connection: PoolConnection,
   ksuids: KSUID[]
 ): Promise<EmploymentRecord[]> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`SELECT * FROM employment WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
   )
 
@@ -21,10 +21,10 @@ export async function getEmploymentRecords(
 }
 
 export async function tryGetEmploymentRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   id: ID
 ): Promise<EmploymentRecord> {
-  const result = await client.query(SQL`SELECT * FROM employment WHERE id = ${id}`)
+  const result = await connection.query(SQL`SELECT * FROM employment WHERE id = ${id}`)
 
   const row = result.rows[0]
 
@@ -86,7 +86,7 @@ function toRecord(row: EmploymentRow): EmploymentRecord {
 }
 
 export async function addEmploymentRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   input: EmploymentInput,
   person: PersonRecord,
   provider: ProviderRecord,
@@ -96,7 +96,7 @@ export async function addEmploymentRecord(
 
   const ksuid = await KSUID.random()
 
-  const insertResult = await client.query(
+  const insertResult = await connection.query(
     SQL`
       INSERT INTO employment (
         ksuid,
@@ -122,16 +122,16 @@ export async function addEmploymentRecord(
     `
   )
 
-  return tryGetEmploymentRecord(client, insertResult.rows[0].id)
+  return tryGetEmploymentRecord(connection, insertResult.rows[0].id)
 }
 
 export async function getEmploymentRecordsByProviderPerson(
-  client: PoolClient,
+  connection: PoolConnection,
   providerPerson: ProviderPersonRecord
 ): Promise<EmploymentRecord[]> {
   const { providerId, personId } = providerPerson
 
-  const result = await client.query(
+  const result = await connection.query(
     SQL`
       SELECT * FROM employment
       WHERE

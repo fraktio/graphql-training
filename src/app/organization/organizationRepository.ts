@@ -1,28 +1,28 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { editAddressRecord, tryGetAddressRecord } from '@app/address/addressRepository'
 import { toFailure, toSuccess } from '@app/common'
 import { ID, Maybe, Slug, Try } from '@app/common/types'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
+import { PoolConnection } from '@app/util/database/types'
 import { asBusinessId, asId, asSlug } from '@app/validation'
 import { EditOrganizationInput, OrganizationRecord } from './types'
 
 export async function getOrganizationRecords(
-  client: PoolClient,
+  connection: PoolConnection,
   ids: ID[]
 ): Promise<OrganizationRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM organization WHERE id = ANY (${ids})`)
+  const result = await connection.query(SQL`SELECT * FROM organization WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
 export async function tryGetOrganizationRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   id: ID
 ): Promise<OrganizationRecord> {
-  const result = await client.query(SQL`SELECT * FROM organization WHERE id = ${id}`)
+  const result = await connection.query(SQL`SELECT * FROM organization WHERE id = ${id}`)
 
   const row = result.rows[0]
 
@@ -34,19 +34,19 @@ export async function tryGetOrganizationRecord(
 }
 
 export async function getOrganizationRecordsBySlugs(
-  client: PoolClient,
+  connection: PoolConnection,
   slugs: Slug[]
 ): Promise<OrganizationRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM organization WHERE slug = ANY (${slugs})`)
+  const result = await connection.query(SQL`SELECT * FROM organization WHERE slug = ANY (${slugs})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
 export async function getOrganizationRecordsByKsuids(
-  client: PoolClient,
+  connection: PoolConnection,
   ksuids: KSUID[]
 ): Promise<OrganizationRecord[]> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`SELECT * FROM organization WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
   )
 
@@ -83,7 +83,7 @@ function toRecord(row: OrganizationRow): OrganizationRecord {
 }
 
 export async function editOrganizationRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   organization: OrganizationRecord,
   input: EditOrganizationInput
 ): Promise<Try<OrganizationRecord, UniqueConstraintViolationError>> {
@@ -93,7 +93,7 @@ export async function editOrganizationRecord(
 
   const organizationResult = await withUniqueConstraintHandling(
     async () => {
-      await client.query(
+      await connection.query(
         SQL`
           UPDATE organization
           SET
@@ -105,7 +105,7 @@ export async function editOrganizationRecord(
         `
       )
 
-      return tryGetOrganizationRecord(client, organization.id)
+      return tryGetOrganizationRecord(connection, organization.id)
     },
     error => (/business_id/.test(error) ? 'businessId' : 'slug')
   )
@@ -114,9 +114,9 @@ export async function editOrganizationRecord(
     return toFailure(organizationResult)
   }
 
-  const existingAddress = await tryGetAddressRecord(client, organization.addressId)
+  const existingAddress = await tryGetAddressRecord(connection, organization.addressId)
 
-  await editAddressRecord(client, existingAddress, address)
+  await editAddressRecord(connection, existingAddress, address)
 
   return toSuccess(organizationResult)
 }

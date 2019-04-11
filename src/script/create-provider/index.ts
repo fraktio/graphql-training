@@ -17,12 +17,12 @@ run('create-provider', async () => {
 
   initializeDatabase(databaseUrl)
 
-  const [organization, provider] = await transaction(async client => {
-    const organizationRecord = await anOrganization(client)
+  const [organization, provider] = await transaction(async connection => {
+    const organizationRecord = await anOrganization(connection)
       .withSlug(asSlug('test-organization'))
       .build()
 
-    const providerRecord = await aProvider(client)
+    const providerRecord = await aProvider(connection)
       .withOrganization(organizationRecord)
       .withSlug(asSlug('test-provider'))
       .build()

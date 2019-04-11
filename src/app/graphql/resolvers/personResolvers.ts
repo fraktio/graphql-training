@@ -128,8 +128,8 @@ export const personResolvers = {
       _: {},
       { loaderFactories: { userLoaderFactory } }: Context
     ): Promise<Email> {
-      return transaction(async client => {
-        const user = await tryGetUser(userLoaderFactory.getLoaders(client), person.userId)
+      return transaction(async connection => {
+        const user = await tryGetUser(userLoaderFactory.getLoaders(connection), person.userId)
 
         return user.email
       })
@@ -140,8 +140,8 @@ export const personResolvers = {
       _: {},
       { loaderFactories: { addressLoaderFactory } }: Context
     ): Promise<AddressRecord> {
-      return transaction(async client => {
-        return tryGetAddress(addressLoaderFactory.getLoaders(client), person.addressId)
+      return transaction(async connection => {
+        return tryGetAddress(addressLoaderFactory.getLoaders(connection), person.addressId)
       })
     }
   },
@@ -164,14 +164,14 @@ export const personResolvers = {
       { input }: AddPersonArgs,
       { loaderFactories: { providerLoaderFactory, collectiveAgreementLoaderFactory } }: Context
     ): Promise<AddPersonOutput> {
-      return transaction(async client => {
+      return transaction(async connection => {
         const {
           providerKsuid,
           personEmployment: { collectiveAgreementKsuid }
         } = input
 
         const provider = await getProviderByKsuid(
-          providerLoaderFactory.getLoaders(client).providerByKsuidLoader,
+          providerLoaderFactory.getLoaders(connection).providerByKsuidLoader,
           providerKsuid
         )
 
@@ -180,7 +180,7 @@ export const personResolvers = {
         }
 
         const collectiveAgreement = await getCollectiveAgreement(
-          collectiveAgreementLoaderFactory.getLoaders(client),
+          collectiveAgreementLoaderFactory.getLoaders(connection),
           collectiveAgreementKsuid
         )
 
@@ -188,7 +188,7 @@ export const personResolvers = {
           throw new NotFoundError('CollectiveAgreement was not found')
         }
 
-        const result = await addPerson(client, input, provider, collectiveAgreement)
+        const result = await addPerson(connection, input, provider, collectiveAgreement)
 
         if (result.success) {
           return {
@@ -214,11 +214,11 @@ export const personResolvers = {
       { input }: EditPersonArgs,
       { loaderFactories: { personLoaderFactory, addressLoaderFactory, userLoaderFactory } }: Context
     ): Promise<EditPersonOutput> {
-      return transaction(async client => {
+      return transaction(async connection => {
         const { ksuid, providerKsuid } = input
 
         const providerPerson = await getProviderPersonByProviderKsuidAndPersonKsuid(
-          client,
+          connection,
           providerKsuid,
           ksuid
         )
@@ -227,15 +227,15 @@ export const personResolvers = {
           throw new NotFoundError('ProviderPerson was not found')
         }
 
-        const personLoader = personLoaderFactory.getLoaders(client)
+        const personLoader = personLoaderFactory.getLoaders(connection)
 
         const person = await tryGetPerson(personLoader, providerPerson.personId)
 
         const result = await editPerson(
           personLoader,
-          addressLoaderFactory.getLoaders(client),
-          userLoaderFactory.getLoaders(client),
-          client,
+          addressLoaderFactory.getLoaders(connection),
+          userLoaderFactory.getLoaders(connection),
+          connection,
           person,
           input
         )

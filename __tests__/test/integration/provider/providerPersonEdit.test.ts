@@ -119,12 +119,12 @@ interface Address
 describe('provider person edit', () => {
   it('edits a person', async done => {
     asyncTest(done, async () => {
-      const [provider, person] = await transaction(async client => {
-        const providerRecord = await aProvider(client).build()
+      const [provider, person] = await transaction(async connection => {
+        const providerRecord = await aProvider(connection).build()
 
-        const personRecord = await aPerson(client).build()
+        const personRecord = await aPerson(connection).build()
 
-        await anEmployment(client)
+        await anEmployment(connection)
           .withProvider(providerRecord)
           .withPerson(personRecord)
           .build()

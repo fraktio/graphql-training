@@ -1,5 +1,4 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { Email } from '@app/address/types'
@@ -7,24 +6,28 @@ import { toFailure, toSuccess } from '@app/common'
 import { ID, Maybe, Try } from '@app/common/types'
 import { UserRecord } from '@app/user/types'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
+import { PoolConnection } from '@app/util/database/types'
 import { asEmail, asId } from '@app/validation'
 
-export async function getUserRecords(client: PoolClient, ids: ID[]): Promise<UserRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM user_account WHERE id = ANY (${ids})`)
+export async function getUserRecords(connection: PoolConnection, ids: ID[]): Promise<UserRecord[]> {
+  const result = await connection.query(SQL`SELECT * FROM user_account WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
-export async function getUserRecord(client: PoolClient, id: ID): Promise<Maybe<UserRecord>> {
-  const result = await client.query(SQL`SELECT * FROM user_account WHERE id = ${id}`)
+export async function getUserRecord(
+  connection: PoolConnection,
+  id: ID
+): Promise<Maybe<UserRecord>> {
+  const result = await connection.query(SQL`SELECT * FROM user_account WHERE id = ${id}`)
 
   const row = result.rows[0]
 
   return row ? toRecord(row) : null
 }
 
-export async function tryGetUserRecord(client: PoolClient, id: ID): Promise<UserRecord> {
-  const user = await getUserRecord(client, id)
+export async function tryGetUserRecord(connection: PoolConnection, id: ID): Promise<UserRecord> {
+  const user = await getUserRecord(connection, id)
 
   if (!user) {
     throw new Error(`User was expected to be found with id ${id}`)
@@ -50,7 +53,7 @@ function toRecord(row: UserRow): UserRecord {
 }
 
 export async function addUserRecordForPerson(
-  client: PoolClient,
+  connection: PoolConnection,
   email: Email
 ): Promise<Try<UserRecord, UniqueConstraintViolationError>> {
   // password is foobar
@@ -60,7 +63,7 @@ export async function addUserRecordForPerson(
 
   const result = await withUniqueConstraintHandling(
     async () => {
-      const insertResult = await client.query(
+      const insertResult = await connection.query(
         SQL`
           INSERT INTO user_account (
             ksuid,
@@ -74,7 +77,7 @@ export async function addUserRecordForPerson(
         `
       )
 
-      return tryGetUserRecord(client, insertResult.rows[0].id)
+      return tryGetUserRecord(connection, insertResult.rows[0].id)
     },
     () => 'email'
   )
@@ -87,13 +90,13 @@ export async function addUserRecordForPerson(
 }
 
 export async function editUserRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   user: UserRecord,
   email: Email
 ): Promise<Try<UserRecord, UniqueConstraintViolationError>> {
   const result = await withUniqueConstraintHandling(
     async () => {
-      await client.query(
+      await connection.query(
         SQL`
           UPDATE user_account
           SET
@@ -103,7 +106,7 @@ export async function editUserRecord(
         `
       )
 
-      return tryGetUserRecord(client, user.id)
+      return tryGetUserRecord(connection, user.id)
     },
     () => 'email'
   )

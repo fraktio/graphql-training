@@ -1,5 +1,3 @@
-import { PoolClient } from 'pg'
-
 import { AddressLoader } from '@app/address/loader/types'
 import { CollectiveAgreementRecord } from '@app/collective-agreement/types'
 import { ID, Maybe, Try } from '@app/common/types'
@@ -13,6 +11,7 @@ import { AddPersonInput, EditPersonInput, PersonRecord } from '@app/person/types
 import { ProviderPersonRecord, ProviderRecord } from '@app/provider/types'
 import { UserLoader } from '@app/user/loader/types'
 import { UniqueConstraintViolationError } from '@app/util/database'
+import { PoolConnection } from '@app/util/database/types'
 
 export async function getPerson(loader: PersonLoader, id: ID): Promise<Maybe<PersonRecord>> {
   return loader.load(id)
@@ -29,23 +28,23 @@ export async function tryGetPerson(loader: PersonLoader, id: ID): Promise<Person
 }
 
 export async function addPerson(
-  client: PoolClient,
+  connection: PoolConnection,
   input: AddPersonInput,
   provider: ProviderRecord,
   collectiveAgreement: CollectiveAgreementRecord
 ): Promise<Try<PersonRecord, UniqueConstraintViolationError>> {
-  return addPersonRecord(client, input, provider, collectiveAgreement)
+  return addPersonRecord(connection, input, provider, collectiveAgreement)
 }
 
 export async function editPerson(
   loader: PersonLoader,
   addressLoader: AddressLoader,
   userLoader: UserLoader,
-  client: PoolClient,
+  connection: PoolConnection,
   person: PersonRecord,
   input: EditPersonInput
 ): Promise<Try<PersonRecord, UniqueConstraintViolationError>> {
-  const result = await editPersonRecord(client, person, input)
+  const result = await editPersonRecord(connection, person, input)
 
   if (result.success) {
     const editedPerson = result.value
@@ -60,10 +59,10 @@ export async function editPerson(
 
 export async function getPersonsByProvider(
   loader: PersonLoader,
-  client: PoolClient,
+  connection: PoolConnection,
   provider: ProviderRecord
 ): Promise<PersonRecord[]> {
-  const persons = await getPersonRecordsByProvider(client, provider)
+  const persons = await getPersonRecordsByProvider(connection, provider)
 
   persons.forEach(person => loader.prime(person.id, person))
 

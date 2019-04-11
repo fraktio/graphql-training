@@ -1,24 +1,24 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { ID, Maybe } from '@app/common/types'
+import { PoolConnection } from '@app/util/database/types'
 import { asId } from '@app/validation'
 import { CollectiveAgreementRecord } from './types'
 
 export async function getAllCollectiveAgreementRecords(
-  client: PoolClient
+  connection: PoolConnection
 ): Promise<CollectiveAgreementRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM collective_agreement`)
+  const result = await connection.query(SQL`SELECT * FROM collective_agreement`)
 
   return result.rows.map(row => toRecord(row))
 }
 
 export async function getCollectiveAgreementRecords(
-  client: PoolClient,
+  connection: PoolConnection,
   ksuids: KSUID[]
 ): Promise<CollectiveAgreementRecord[]> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`SELECT * FROM collective_agreement WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
   )
 
@@ -26,10 +26,10 @@ export async function getCollectiveAgreementRecords(
 }
 
 export async function tryGetCollectiveAgreementRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   id: ID
 ): Promise<CollectiveAgreementRecord> {
-  const result = await client.query(SQL`SELECT * FROM collective_agreement WHERE id = ${id}`)
+  const result = await connection.query(SQL`SELECT * FROM collective_agreement WHERE id = ${id}`)
 
   const row = result.rows[0]
 

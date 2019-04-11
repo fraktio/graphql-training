@@ -34,10 +34,10 @@ export const providerResolvers = {
       _: {},
       { loaderFactories: { personLoaderFactory } }: Context
     ): Promise<ProviderPersonRecord[]> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return (await getPersonsByProvider(
-          personLoaderFactory.getLoaders(client),
-          client,
+          personLoaderFactory.getLoaders(connection),
+          connection,
           provider
         )).map(person => ({
           personId: person.id,
@@ -51,9 +51,9 @@ export const providerResolvers = {
       _: {},
       { loaderFactories: { organizationLoaderFactory } }: Context
     ): Promise<OrganizationRecord> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return tryGetOrganizationByProvider(
-          organizationLoaderFactory.getLoaders(client).organizationLoader,
+          organizationLoaderFactory.getLoaders(connection).organizationLoader,
           provider
         )
       })
@@ -66,8 +66,11 @@ export const providerResolvers = {
       _: {},
       { loaderFactories: { personLoaderFactory } }: Context
     ): Promise<PersonRecord> {
-      return transaction(async client => {
-        return tryGetPersonByProviderPerson(personLoaderFactory.getLoaders(client), providerPerson)
+      return transaction(async connection => {
+        return tryGetPersonByProviderPerson(
+          personLoaderFactory.getLoaders(connection),
+          providerPerson
+        )
       })
     },
 
@@ -76,10 +79,10 @@ export const providerResolvers = {
       _: {},
       { loaderFactories: { employmentLoaderFactory } }: Context
     ): Promise<EmploymentRecord[]> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return getEmploymentsByProviderPerson(
-          employmentLoaderFactory.getLoaders(client),
-          client,
+          employmentLoaderFactory.getLoaders(connection),
+          connection,
           providerPerson
         )
       })
@@ -92,10 +95,10 @@ export const providerResolvers = {
       args: ProviderArgs,
       { loaderFactories: { providerLoaderFactory } }: Context
     ): Promise<Maybe<ProviderRecord>> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return getProviderBySlugs(
-          providerLoaderFactory.getLoaders(client),
-          client,
+          providerLoaderFactory.getLoaders(connection),
+          connection,
           args.organizationSlug,
           args.providerSlug
         )
@@ -103,9 +106,9 @@ export const providerResolvers = {
     },
 
     async providerPerson(_: Root, args: ProviderPersonArgs): Promise<Maybe<ProviderPersonRecord>> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return getProviderPersonBySlugsAndPersonKsuid(
-          client,
+          connection,
           args.organizationSlug,
           args.providerSlug,
           args.personKsuid

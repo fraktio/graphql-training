@@ -1,10 +1,10 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 
 import { AddressLoader } from '@app/address/loader/types'
 import { Maybe, Slug, Try } from '@app/common/types'
 import { ProviderRecord } from '@app/provider/types'
 import { UniqueConstraintViolationError } from '@app/util/database'
+import { PoolConnection } from '@app/util/database/types'
 import {
   OrganizationByKSUIDLoader,
   OrganizationBySlugLoader,
@@ -44,11 +44,11 @@ export async function getOrganizationByKsuid(
 export async function editOrganization(
   loaders: OrganizationLoaders,
   addressLoader: AddressLoader,
-  client: PoolClient,
+  connection: PoolConnection,
   person: OrganizationRecord,
   input: EditOrganizationInput
 ): Promise<Try<OrganizationRecord, UniqueConstraintViolationError>> {
-  const result = await editOrganizationRecord(client, person, input)
+  const result = await editOrganizationRecord(connection, person, input)
 
   if (result.success) {
     const editedOrganization = result.value

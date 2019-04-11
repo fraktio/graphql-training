@@ -1,5 +1,4 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import {
@@ -16,6 +15,7 @@ import { ProviderRecord } from '@app/provider/types'
 import { UILanguage } from '@app/user/types'
 import { addUserRecordForPerson, editUserRecord, tryGetUserRecord } from '@app/user/userRepository'
 import { UniqueConstraintViolationError, withUniqueConstraintHandling } from '@app/util/database'
+import { PoolConnection } from '@app/util/database/types'
 import {
   asBic,
   asCountryCode,
@@ -26,14 +26,20 @@ import {
   asPhone
 } from '@app/validation'
 
-export async function getPersonRecords(client: PoolClient, ids: ID[]): Promise<PersonRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM person WHERE id = ANY (${ids})`)
+export async function getPersonRecords(
+  connection: PoolConnection,
+  ids: ID[]
+): Promise<PersonRecord[]> {
+  const result = await connection.query(SQL`SELECT * FROM person WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
-export async function tryGetPersonRecord(client: PoolClient, id: ID): Promise<PersonRecord> {
-  const result = await client.query(SQL`SELECT * FROM person WHERE id = ${id}`)
+export async function tryGetPersonRecord(
+  connection: PoolConnection,
+  id: ID
+): Promise<PersonRecord> {
+  const result = await connection.query(SQL`SELECT * FROM person WHERE id = ${id}`)
 
   const row = result.rows[0]
 
@@ -125,7 +131,7 @@ function toLanguages(languages: string): Language[] {
 }
 
 export async function addPersonRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   input: AddPersonInput,
   provider: ProviderRecord,
   collectiveAgreement: CollectiveAgreementRecord
@@ -151,19 +157,19 @@ export async function addPersonRecord(
     personEmployment: { employment }
   } = input
 
-  const userResult = await addUserRecordForPerson(client, email)
+  const userResult = await addUserRecordForPerson(connection, email)
 
   if (!userResult.success) {
     return userResult
   }
 
-  const personAddress = await addAddressRecord(client, address)
+  const personAddress = await addAddressRecord(connection, address)
 
   const person = await withUniqueConstraintHandling(
     async () => {
       const ksuid = await KSUID.random()
 
-      const insertResult = await client.query(
+      const insertResult = await connection.query(
         SQL`
           INSERT INTO person (
             ksuid,
@@ -205,7 +211,7 @@ export async function addPersonRecord(
         `
       )
 
-      return tryGetPersonRecord(client, insertResult.rows[0].id)
+      return tryGetPersonRecord(connection, insertResult.rows[0].id)
     },
     error => (/personal_identity_code/.test(error) ? 'personalIdentityCode' : 'phone')
   )
@@ -214,16 +220,16 @@ export async function addPersonRecord(
     return toFailure(person)
   }
 
-  await addEmploymentRecord(client, employment, person, provider, collectiveAgreement)
+  await addEmploymentRecord(connection, employment, person, provider, collectiveAgreement)
 
   return toSuccess(person)
 }
 
 export async function getPersonRecordsByProvider(
-  client: PoolClient,
+  connection: PoolConnection,
   provider: ProviderRecord
 ): Promise<PersonRecord[]> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`
       SELECT DISTINCT p.* FROM person p
       INNER JOIN employment e ON e.person_id = p.id
@@ -236,7 +242,7 @@ export async function getPersonRecordsByProvider(
 }
 
 export async function editPersonRecord(
-  client: PoolClient,
+  connection: PoolConnection,
   person: PersonRecord,
   input: EditPersonInput
 ): Promise<Try<PersonRecord, UniqueConstraintViolationError>> {
@@ -260,9 +266,9 @@ export async function editPersonRecord(
     }
   } = input
 
-  const existingUser = await tryGetUserRecord(client, person.userId)
+  const existingUser = await tryGetUserRecord(connection, person.userId)
 
-  const editedUser = await editUserRecord(client, existingUser, email)
+  const editedUser = await editUserRecord(connection, existingUser, email)
 
   if (!editedUser.success) {
     return editedUser
@@ -270,7 +276,7 @@ export async function editPersonRecord(
 
   const editedPerson = await withUniqueConstraintHandling(
     async () => {
-      await client.query(
+      await connection.query(
         SQL`
           UPDATE person
           SET
@@ -292,7 +298,7 @@ export async function editPersonRecord(
         `
       )
 
-      return tryGetPersonRecord(client, person.id)
+      return tryGetPersonRecord(connection, person.id)
     },
     error => (/personal_identity_code/.test(error) ? 'personalIdentityCode' : 'phone')
   )
@@ -301,9 +307,9 @@ export async function editPersonRecord(
     return toFailure(editedPerson)
   }
 
-  const existingAddress = await tryGetAddressRecord(client, person.addressId)
+  const existingAddress = await tryGetAddressRecord(connection, person.addressId)
 
-  await editAddressRecord(client, existingAddress, address)
+  await editAddressRecord(connection, existingAddress, address)
 
   return toSuccess(editedPerson)
 }

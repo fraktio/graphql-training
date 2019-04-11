@@ -1,7 +1,7 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 
 import { Maybe } from '@app/common/types'
+import { PoolConnection } from '@app/util/database/types'
 import { getAllCollectiveAgreementRecords } from './collectiveAgreementRepository'
 import { CollectiveAgreementByKSUIDLoader } from './loader/types'
 import { CollectiveAgreementRecord } from './types'
@@ -15,9 +15,9 @@ export async function getCollectiveAgreement(
 
 export async function getAllCollectiveAgreements(
   loader: CollectiveAgreementByKSUIDLoader,
-  client: PoolClient
+  connection: PoolConnection
 ): Promise<CollectiveAgreementRecord[]> {
-  const collectiveAgreements = await getAllCollectiveAgreementRecords(client)
+  const collectiveAgreements = await getAllCollectiveAgreementRecords(connection)
 
   collectiveAgreements.forEach(collectiveAgreement =>
     loader.prime(collectiveAgreement.ksuid, collectiveAgreement)

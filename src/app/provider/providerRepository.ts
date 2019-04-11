@@ -1,23 +1,26 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { ID, Maybe, Slug } from '@app/common/types'
 import { OrganizationRecord } from '@app/organization/types'
+import { PoolConnection } from '@app/util/database/types'
 import { asBusinessId, asId, asSlug } from '@app/validation'
 import { ProviderPersonRecord, ProviderRecord } from './types'
 
-export async function getProviderRecords(client: PoolClient, ids: ID[]): Promise<ProviderRecord[]> {
-  const result = await client.query(SQL`SELECT * FROM provider WHERE id = ANY (${ids})`)
+export async function getProviderRecords(
+  connection: PoolConnection,
+  ids: ID[]
+): Promise<ProviderRecord[]> {
+  const result = await connection.query(SQL`SELECT * FROM provider WHERE id = ANY (${ids})`)
 
   return result.rows.map(row => toRecord(row))
 }
 
 export async function getProviderRecordsByKsuids(
-  client: PoolClient,
+  connection: PoolConnection,
   ksuids: KSUID[]
 ): Promise<ProviderRecord[]> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`SELECT * FROM provider WHERE ksuid = ANY (${ksuids.map(ksuid => ksuid.string)})`
   )
 
@@ -25,18 +28,21 @@ export async function getProviderRecordsByKsuids(
 }
 
 export async function getProviderRecordByKsuid(
-  client: PoolClient,
+  connection: PoolConnection,
   ksuid: KSUID
 ): Promise<Maybe<ProviderRecord>> {
-  const result = await client.query(SQL`SELECT * FROM provider WHERE ksuid = ${ksuid.string}`)
+  const result = await connection.query(SQL`SELECT * FROM provider WHERE ksuid = ${ksuid.string}`)
 
   const row = result.rows[0]
 
   return row ? toRecord(row) : null
 }
 
-export async function tryGetProviderRecord(client: PoolClient, id: ID): Promise<ProviderRecord> {
-  const result = await client.query(SQL`SELECT * FROM provider WHERE id = ${id}`)
+export async function tryGetProviderRecord(
+  connection: PoolConnection,
+  id: ID
+): Promise<ProviderRecord> {
+  const result = await connection.query(SQL`SELECT * FROM provider WHERE id = ${id}`)
 
   const row = result.rows[0]
 
@@ -89,10 +95,10 @@ function toRecord(row: ProviderRow): ProviderRecord {
 }
 
 export async function getProviderRecordsByOrganization(
-  client: PoolClient,
+  connection: PoolConnection,
   organization: OrganizationRecord
 ): Promise<ProviderRecord[]> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`
       SELECT * FROM provider
       WHERE
@@ -104,11 +110,11 @@ export async function getProviderRecordsByOrganization(
 }
 
 export async function getProviderRecordBySlugs(
-  client: PoolClient,
+  connection: PoolConnection,
   organizationSlug: Slug,
   providerSlug: Slug
 ): Promise<Maybe<ProviderRecord>> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`
       SELECT p.* FROM provider p
       INNER JOIN organization o ON p.organization_id = o.id
@@ -124,12 +130,12 @@ export async function getProviderRecordBySlugs(
 }
 
 export async function getProviderPersonRecordBySlugsAndPersonKsuid(
-  client: PoolClient,
+  connection: PoolConnection,
   organizationSlug: Slug,
   providerSlug: Slug,
   personKsuid: KSUID
 ): Promise<Maybe<ProviderPersonRecord>> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`
       SELECT DISTINCT
         pr.id AS provider_id,
@@ -165,11 +171,11 @@ function toProviderPersonRecord(row: ProviderPersonRow): ProviderPersonRecord {
 }
 
 export async function getProviderPersonRecordByProviderKsuidAndPersonKsuid(
-  client: PoolClient,
+  connection: PoolConnection,
   providerKsuid: KSUID,
   personKsuid: KSUID
 ): Promise<Maybe<ProviderPersonRecord>> {
-  const result = await client.query(
+  const result = await connection.query(
     SQL`
       SELECT DISTINCT
         pr.id AS provider_id,

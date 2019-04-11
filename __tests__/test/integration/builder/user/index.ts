@@ -1,22 +1,22 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 import SQL from 'sql-template-strings'
 
 import { Email } from '@app/address/types'
 import { UserRecord } from '@app/user/types'
 import { tryGetUserRecord } from '@app/user/userRepository'
+import { PoolConnection } from '@app/util/database/types'
 import { asEmail } from '@app/validation'
 
 class UserBuilder {
   private email: Email = asEmail('test@user.com')
   private password: string = '$2y$12$6JA85AQYlkwIZQr2Gg4oJOY2LeCB1BKlGIwuooq4tZ6WGnmUfXDn2' // test
 
-  constructor(private readonly client: PoolClient) {}
+  constructor(private readonly connection: PoolConnection) {}
 
   public async build(): Promise<UserRecord> {
     const ksuid = await KSUID.random()
 
-    const insertResult = await this.client.query(
+    const insertResult = await this.connection.query(
       SQL`
         INSERT INTO user_account (
           ksuid,
@@ -30,10 +30,10 @@ class UserBuilder {
       `
     )
 
-    return tryGetUserRecord(this.client, insertResult.rows[0].id)
+    return tryGetUserRecord(this.connection, insertResult.rows[0].id)
   }
 }
 
-export function aUser(client: PoolClient): UserBuilder {
-  return new UserBuilder(client)
+export function aUser(connection: PoolConnection): UserBuilder {
+  return new UserBuilder(connection)
 }

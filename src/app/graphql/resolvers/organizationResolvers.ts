@@ -34,8 +34,8 @@ export const organizationResolvers = {
       _: {},
       { loaderFactories: { addressLoaderFactory } }: Context
     ): Promise<AddressRecord> {
-      return transaction(async client => {
-        return tryGetAddress(addressLoaderFactory.getLoaders(client), organization.addressId)
+      return transaction(async connection => {
+        return tryGetAddress(addressLoaderFactory.getLoaders(connection), organization.addressId)
       })
     },
 
@@ -44,10 +44,10 @@ export const organizationResolvers = {
       _: {},
       { loaderFactories: { providerLoaderFactory } }: Context
     ): Promise<ProviderRecord[]> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return getProvidersByOrganization(
-          providerLoaderFactory.getLoaders(client),
-          client,
+          providerLoaderFactory.getLoaders(connection),
+          connection,
           organization
         )
       })
@@ -66,9 +66,9 @@ export const organizationResolvers = {
       args: { slug: Slug },
       { loaderFactories: { organizationLoaderFactory } }: Context
     ): Promise<Maybe<OrganizationRecord>> {
-      return transaction(async client => {
+      return transaction(async connection => {
         return getOrganizationBySlug(
-          organizationLoaderFactory.getLoaders(client).organizationBySlugLoader,
+          organizationLoaderFactory.getLoaders(connection).organizationBySlugLoader,
           args.slug
         )
       })
@@ -81,10 +81,10 @@ export const organizationResolvers = {
       { input }: EditOrganizationArgs,
       { loaderFactories: { organizationLoaderFactory, addressLoaderFactory } }: Context
     ): Promise<EditOrganizationOutput> {
-      return transaction(async client => {
+      return transaction(async connection => {
         const { ksuid } = input
 
-        const organizationLoaders = organizationLoaderFactory.getLoaders(client)
+        const organizationLoaders = organizationLoaderFactory.getLoaders(connection)
 
         const organization = await getOrganizationByKsuid(
           organizationLoaders.organizationByKsuidLoader,
@@ -97,8 +97,8 @@ export const organizationResolvers = {
 
         const result = await editOrganization(
           organizationLoaders,
-          addressLoaderFactory.getLoaders(client),
-          client,
+          addressLoaderFactory.getLoaders(connection),
+          connection,
           organization,
           input
         )

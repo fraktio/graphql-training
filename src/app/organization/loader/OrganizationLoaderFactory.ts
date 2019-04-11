@@ -1,5 +1,4 @@
 import DataLoader from 'dataloader'
-import { PoolClient } from 'pg'
 
 import { AbstractLoaderFactory } from '@app/loader/AbstractLoaderFactory'
 import {
@@ -7,6 +6,7 @@ import {
   getOrganizationRecordsByKsuids,
   getOrganizationRecordsBySlugs
 } from '@app/organization/organizationRepository'
+import { PoolConnection } from '@app/util/database/types'
 import {
   OrganizationByKSUIDLoader,
   OrganizationBySlugLoader,
@@ -15,9 +15,9 @@ import {
 } from './types'
 
 export class OrganizationLoaderFactory extends AbstractLoaderFactory<OrganizationLoaders> {
-  protected createLoaders(client: PoolClient): OrganizationLoaders {
+  protected createLoaders(connection: PoolConnection): OrganizationLoaders {
     const organizationLoader: OrganizationLoader = new DataLoader(async ids => {
-      const organizations = await getOrganizationRecords(client, ids)
+      const organizations = await getOrganizationRecords(connection, ids)
 
       organizations.forEach(organization => {
         organizationBySlugLoader.prime(organization.slug, organization)
@@ -28,7 +28,7 @@ export class OrganizationLoaderFactory extends AbstractLoaderFactory<Organizatio
     })
 
     const organizationBySlugLoader: OrganizationBySlugLoader = new DataLoader(async slugs => {
-      const organizations = await getOrganizationRecordsBySlugs(client, slugs)
+      const organizations = await getOrganizationRecordsBySlugs(connection, slugs)
 
       organizations.forEach(organization => {
         organizationLoader.prime(organization.id, organization)
@@ -41,7 +41,7 @@ export class OrganizationLoaderFactory extends AbstractLoaderFactory<Organizatio
     })
 
     const organizationByKsuidLoader: OrganizationByKSUIDLoader = new DataLoader(async ksuids => {
-      const organizations = await getOrganizationRecordsByKsuids(client, ksuids)
+      const organizations = await getOrganizationRecordsByKsuids(connection, ksuids)
 
       organizations.forEach(organization => {
         organizationLoader.prime(organization.id, organization)

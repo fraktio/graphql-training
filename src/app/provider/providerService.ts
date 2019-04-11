@@ -1,8 +1,8 @@
 import KSUID from 'ksuid'
-import { PoolClient } from 'pg'
 
 import { ID, Maybe, Slug } from '@app/common/types'
 import { OrganizationRecord } from '@app/organization/types'
+import { PoolConnection } from '@app/util/database/types'
 import { ProviderByKSUIDLoader, ProviderLoader, ProviderLoaders } from './loader/types'
 import {
   getProviderPersonRecordByProviderKsuidAndPersonKsuid,
@@ -31,11 +31,11 @@ export async function tryGetProvider(loader: ProviderLoader, id: ID): Promise<Pr
 
 export async function getProviderBySlugs(
   loaders: ProviderLoaders,
-  client: PoolClient,
+  connection: PoolConnection,
   organizationSlug: Slug,
   providerSlug: Slug
 ): Promise<Maybe<ProviderRecord>> {
-  const provider = await getProviderRecordBySlugs(client, organizationSlug, providerSlug)
+  const provider = await getProviderRecordBySlugs(connection, organizationSlug, providerSlug)
 
   if (provider) {
     const { providerLoader, providerByKsuidLoader } = loaders
@@ -48,13 +48,13 @@ export async function getProviderBySlugs(
 }
 
 export async function getProviderPersonBySlugsAndPersonKsuid(
-  client: PoolClient,
+  connection: PoolConnection,
   organizationSlug: Slug,
   providerSlug: Slug,
   personKsuid: KSUID
 ): Promise<Maybe<ProviderPersonRecord>> {
   return getProviderPersonRecordBySlugsAndPersonKsuid(
-    client,
+    connection,
     organizationSlug,
     providerSlug,
     personKsuid
@@ -62,19 +62,23 @@ export async function getProviderPersonBySlugsAndPersonKsuid(
 }
 
 export async function getProviderPersonByProviderKsuidAndPersonKsuid(
-  client: PoolClient,
+  connection: PoolConnection,
   providerKsuid: KSUID,
   personKsuid: KSUID
 ): Promise<Maybe<ProviderPersonRecord>> {
-  return getProviderPersonRecordByProviderKsuidAndPersonKsuid(client, providerKsuid, personKsuid)
+  return getProviderPersonRecordByProviderKsuidAndPersonKsuid(
+    connection,
+    providerKsuid,
+    personKsuid
+  )
 }
 
 export async function getProvidersByOrganization(
   loaders: ProviderLoaders,
-  client: PoolClient,
+  connection: PoolConnection,
   organization: OrganizationRecord
 ): Promise<ProviderRecord[]> {
-  const providers = await getProviderRecordsByOrganization(client, organization)
+  const providers = await getProviderRecordsByOrganization(connection, organization)
 
   const { providerLoader, providerByKsuidLoader } = loaders
 
