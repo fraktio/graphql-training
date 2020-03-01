@@ -1,14 +1,17 @@
 import { ApolloEngine } from 'apollo-engine'
 import { ApolloServer } from 'apollo-server-express'
-
+import { Config } from '@src/config'
 import { Context } from '@app/graphql/types'
 import { createLoaderFactories } from '@app/loader'
-import { Config } from '@src/config'
 import { createSchema } from '@src/util/graphql'
+import { getAuthenticatedUserAndEncryptedAuthenticationToken } from '@app/authentication/authenticationService'
+import { transaction } from '@app/util/database'
 
 const schema = createSchema()
 
 export function createApolloServer(config: Config): ApolloServer {
+  const { expirationTime, refreshTime } = config.authentication.session
+
   return new ApolloServer({
     cacheControl: config.graphql.engineProxy,
     introspection: config.graphql.playground || config.graphql.engineProxy,
@@ -28,10 +31,25 @@ export function createApolloServer(config: Config): ApolloServer {
       return error
     },
 
-    context: async (): Promise<Context> => {
-      return {
-        loaderFactories: createLoaderFactories()
-      }
+    context: async ({ req, res }): Promise<Context> => {
+      return transaction(async client => {
+        const {
+          currentUser,
+          encryptedAuthenticationToken
+        } = await getAuthenticatedUserAndEncryptedAuthenticationToken(
+          client,
+          req.headers.authorization ? req.headers.authorization : '',
+          expirationTime,
+          refreshTime
+        )
+
+        return {
+          config,
+          currentUser,
+          encryptedAuthenticationToken,
+          loaderFactories: createLoaderFactories()
+        }
+      })
     }
   })
 }

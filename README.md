@@ -1,4 +1,4 @@
-# Enjoy - Server
+# Training Server
 
 ## Installation
 
@@ -19,7 +19,6 @@ http://localhost:8090/graphql
 ## Migrations
 
 Migrations are created using [Knex](https://knexjs.org/#Migrations).
-
 Create a new migration with `yarn knex migrate:make <name>`.
 
 ## Tests
@@ -32,13 +31,7 @@ To run tests:
 
 - `yarn test`
 
-## Scripts
-
-To get started you can create a test organization and a provider by running:
-
-- `yarn create-provider`
-
 ## Accessing database (PostgreSQL)
 
-- `docker-compose exec database psql -Uenjoy enjoy`
-- or `docker-compose exec test_database psql -Uenjoy enjoy_test`
+- `docker-compose exec database psql -Ugraphql_training graphql_training`
+- or `docker-compose exec test_database psql -Ugraphql_training graphql_training_test`

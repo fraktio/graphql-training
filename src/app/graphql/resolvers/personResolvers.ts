@@ -1,27 +1,22 @@
-import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
-
-import { tryGetAddress } from '@app/address/addressService'
-import { AddressRecord, Email } from '@app/address/types'
-import { getCollectiveAgreement } from '@app/collective-agreement/collectiveAgreementService'
-import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
+import { AddPersonInput, EditPersonInput, PersonRecord } from '@app/person/types'
 import { Context, NotFoundError } from '@app/graphql/types'
-import { addPerson, editPerson, tryGetPerson } from '@app/person/personService'
-import {
-  AddPersonInput,
-  EditPersonInput,
-  Language,
-  PersonalIdentityCode,
-  PersonRecord
-} from '@app/person/types'
-import {
-  getProviderByKsuid,
-  getProviderPersonByProviderKsuidAndPersonKsuid
-} from '@app/provider/providerService'
-import { tryGetUser } from '@app/user/userService'
-import { transaction } from '@app/util/database'
-import { validateLanguage, validatePersonalIdentityCode } from '@app/validation'
-import { Root, ScalarLanguage, ScalarPersonalIdentityCode, ScalarType } from './types'
+import { Email, PersonalIdentityCode, Phone } from '@app/common/types'
+import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
+import { Root, ScalarEmail, ScalarPersonalIdentityCode, ScalarPhone, ScalarType } from './types'
+import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
+import { addPerson, editPerson, getPersons, tryGetPersonByKsuid } from '@app/person/personService'
 import { parseScalarValue, parseStringScalarLiteral } from './util'
+import { validateCountryCode, validateEmail, validatePhone } from '@app/validation'
+
+import KSUID from 'ksuid'
+import { hasScalarValidationErrors } from './util/scalarValidationError'
+import { transaction } from '@app/util/database'
+import { tryGetCompaniesByPersonId } from '@app/company/companyService'
+import { validatePersonalIdentityCode } from '@app/validation'
+
+interface PersonArgs {
+  ksuid: KSUID
+}
 
 export interface AddPersonArgs
   extends Readonly<{
@@ -86,62 +81,102 @@ export const personResolvers = {
     }
   }),
 
-  Language: new GraphQLScalarType({
-    description: 'Language custom scalar type',
-    name: 'Language',
+  Phone: new GraphQLScalarType({
+    description: 'Phone custom scalar type',
+    name: 'Phone',
 
-    serialize(value: Language): ScalarLanguage {
+    serialize(value: Phone): ScalarPhone {
       return {
-        type: ScalarType.LANGUAGE,
+        type: ScalarType.PHONE,
         value: value.toString()
       }
     },
 
-    parseValue(value: any): Language {
-      const scalarValue = parseScalarValue<string>(value, ScalarType.LANGUAGE)
+    parseValue(value: any): Phone {
+      const scalarValue = parseScalarValue<string>(value, ScalarType.PHONE)
 
-      const result = validateLanguage(scalarValue)
+      const result = validatePhone(scalarValue)
 
       if (result.success) {
         return result.value
       } else {
-        throw new GraphQLError('Language must be a valid language')
+        throw new GraphQLError(
+          ' Phone must be a valid a valid phone number in international format'
+        )
       }
     },
 
-    parseLiteral(ast: ValueNode): Language {
-      const scalarValue = parseStringScalarLiteral(ast, ScalarType.LANGUAGE)
+    parseLiteral(ast: ValueNode): Phone {
+      const scalarValue = parseStringScalarLiteral(ast, ScalarType.PHONE)
 
-      const result = validateLanguage(scalarValue)
+      const result = validatePhone(scalarValue)
 
       if (result.success) {
         return result.value
       } else {
-        throw new GraphQLError('Language must be a valid language')
+        throw new GraphQLError(
+          ' Phone must be a valid a valid phone number in international format'
+        )
       }
     }
   }),
 
-  Person: {
-    async email(
-      person: PersonRecord,
-      _: {},
-      { loaderFactories: { userLoaderFactory } }: Context
-    ): Promise<Email> {
-      return transaction(async connection => {
-        const user = await tryGetUser(userLoaderFactory.getLoaders(connection), person.userId)
+  Email: new GraphQLScalarType({
+    description: 'Email custom scalar type',
+    name: 'Email',
 
-        return user.email
-      })
+    serialize(value: Email): ScalarEmail {
+      return {
+        type: ScalarType.EMAIL,
+        value: value.toString()
+      }
     },
 
-    async address(
-      person: PersonRecord,
-      _: {},
-      { loaderFactories: { addressLoaderFactory } }: Context
-    ): Promise<AddressRecord> {
+    parseValue(value: any): Email {
+      const scalarValue = parseScalarValue<string>(value, ScalarType.EMAIL)
+
+      const result = validateEmail(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('Email must be a valid a valid emai address')
+      }
+    },
+
+    parseLiteral(ast: ValueNode): Email {
+      const scalarValue = parseStringScalarLiteral(ast, ScalarType.EMAIL)
+
+      const result = validateEmail(scalarValue)
+
+      if (result.success) {
+        return result.value
+      } else {
+        throw new GraphQLError('Email must be a valid a valid emai address')
+      }
+    }
+  }),
+
+  Query: {
+    async persons(
+      _: Root,
+      args: {},
+      { loaderFactories: { personLoaderFactory } }: Context
+    ): Promise<PersonRecord[]> {
       return transaction(async connection => {
-        return tryGetAddress(addressLoaderFactory.getLoaders(connection), person.addressId)
+        const { personLoader } = personLoaderFactory.getLoaders(connection)
+
+        return getPersons(personLoader, connection)
+      })
+    },
+    async person(
+      _: Root,
+      args: PersonArgs,
+      { loaderFactories: { personLoaderFactory } }: Context
+    ): Promise<PersonRecord> {
+      return transaction(async connection => {
+        const { personByKsuidLoader } = personLoaderFactory.getLoaders(connection)
+        return tryGetPersonByKsuid(personByKsuidLoader, args.ksuid)
       })
     }
   },
@@ -159,36 +194,24 @@ export const personResolvers = {
   },
 
   Mutation: {
-    async addPerson(
-      _: Root,
-      { input }: AddPersonArgs,
-      { loaderFactories: { providerLoaderFactory, collectiveAgreementLoaderFactory } }: Context
-    ): Promise<AddPersonOutput> {
+    async addPerson(_: Root, { input }: AddPersonArgs): Promise<AddPersonOutput> {
+      // output testing...
+      const test = hasScalarValidationErrors(input)
+
+      if (test) {
+        return {
+          success: false as false,
+          validationErrors: [
+            {
+              code: ValidationErrorCode.SCALAR_VALIDATION_ERROR,
+              message: 'testing...  '
+            }
+          ]
+        }
+      }
+
       return transaction(async connection => {
-        const {
-          providerKsuid,
-          personEmployment: { collectiveAgreementKsuid }
-        } = input
-
-        const provider = await getProviderByKsuid(
-          providerLoaderFactory.getLoaders(connection).providerByKsuidLoader,
-          providerKsuid
-        )
-
-        if (!provider) {
-          throw new NotFoundError('Provider was not found')
-        }
-
-        const collectiveAgreement = await getCollectiveAgreement(
-          collectiveAgreementLoaderFactory.getLoaders(connection),
-          collectiveAgreementKsuid
-        )
-
-        if (!collectiveAgreement) {
-          throw new NotFoundError('CollectiveAgreement was not found')
-        }
-
-        const result = await addPerson(connection, input, provider, collectiveAgreement)
+        const result = await addPerson(connection, input)
 
         if (result.success) {
           return {
@@ -201,7 +224,7 @@ export const personResolvers = {
             validationErrors: [
               {
                 code: ValidationErrorCode.UNIQUE_CONSTRAINT_VIOLATION,
-                field: result.error.field
+                message: result.error.field
               }
             ]
           }
@@ -212,33 +235,18 @@ export const personResolvers = {
     async editPerson(
       _: Root,
       { input }: EditPersonArgs,
-      { loaderFactories: { personLoaderFactory, addressLoaderFactory, userLoaderFactory } }: Context
+      { loaderFactories: { personLoaderFactory } }: Context
     ): Promise<EditPersonOutput> {
       return transaction(async connection => {
-        const { ksuid, providerKsuid } = input
+        const { ksuid } = input
 
-        const providerPerson = await getProviderPersonByProviderKsuidAndPersonKsuid(
-          connection,
-          providerKsuid,
-          ksuid
-        )
+        const personLoaders = personLoaderFactory.getLoaders(connection)
 
-        if (!providerPerson) {
-          throw new NotFoundError('ProviderPerson was not found')
-        }
+        const { personLoader, personByKsuidLoader } = personLoaders
 
-        const personLoader = personLoaderFactory.getLoaders(connection)
+        const person = await tryGetPersonByKsuid(personByKsuidLoader, ksuid)
 
-        const person = await tryGetPerson(personLoader, providerPerson.personId)
-
-        const result = await editPerson(
-          personLoader,
-          addressLoaderFactory.getLoaders(connection),
-          userLoaderFactory.getLoaders(connection),
-          connection,
-          person,
-          input
-        )
+        const result = await editPerson(personLoader, connection, person, input)
 
         if (result.success) {
           return {
@@ -251,11 +259,25 @@ export const personResolvers = {
             validationErrors: [
               {
                 code: ValidationErrorCode.UNIQUE_CONSTRAINT_VIOLATION,
-                field: result.error.field
+                message: result.error.field
               }
             ]
           }
         }
+      })
+    }
+  },
+
+  Person: {
+    async employers(
+      person: PersonRecord,
+      _: {},
+      { loaderFactories: { companyLoaderFactory } }: Context
+    ): Promise<Array<PersonRecord>> {
+      return transaction(async connection => {
+        const companyLoaders = companyLoaderFactory.getLoaders(connection)
+        const { companiesByEmployeeLoader } = companyLoaders
+        return tryGetCompaniesByPersonId(companiesByEmployeeLoader, person.id)
       })
     }
   }

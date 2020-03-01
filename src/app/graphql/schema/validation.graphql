@@ -3,10 +3,11 @@ type ValidationErrors {
 }
 
 type ValidationError {
-  field: String!
+  message: String!
   code: ValidationErrorCode!
 }
 
 enum ValidationErrorCode {
   UNIQUE_CONSTRAINT_VIOLATION
+  SCALAR_VALIDATION_ERROR
 }

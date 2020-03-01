@@ -3,12 +3,12 @@ version: '3'
 services:
   # Database
   database:
-    image: postgres:11.1-alpine
+    image: postgres:12.1
     command: postgres -c log_statement=all
     environment:
-      - POSTGRES_DB=enjoy
-      - POSTGRES_USER=enjoy
-      - POSTGRES_PASSWORD=enjoy
+      - POSTGRES_DB=graphql_training
+      - POSTGRES_USER=graphql_training
+      - POSTGRES_PASSWORD=graphql_training
       - TZ=Europe/Helsinki
     ports:
       - '127.0.0.1:5432:5432'
@@ -17,12 +17,12 @@ services:
 
   # Test database
   test_database:
-    image: postgres:11.1-alpine
+    image: postgres:12.1
     command: postgres -c log_statement=all
     environment:
-      - POSTGRES_DB=enjoy_test
-      - POSTGRES_USER=enjoy
-      - POSTGRES_PASSWORD=enjoy
+      - POSTGRES_DB=graphql_training_test
+      - POSTGRES_USER=graphql_training
+      - POSTGRES_PASSWORD=graphql_training
       - TZ=Europe/Helsinki
     ports:
       - '127.0.0.1:5433:5432'

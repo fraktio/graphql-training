@@ -1,10 +1,11 @@
+import { GraphQLScalarType, ValueNode } from 'graphql'
+import { ScalarDate, ScalarDateTime, ScalarHour, ScalarType } from './types'
 import { format, isValid, parse } from 'date-fns'
-import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
+import { parseIntScalarLiteral, parseScalarValue, parseStringScalarLiteral } from './util'
 
 import { Hour } from '@app/date/types'
+import { UserInputError } from 'apollo-server-express'
 import { validateHour } from '@app/validation'
-import { ScalarDate, ScalarDateTime, ScalarHour, ScalarType } from './types'
-import { parseIntScalarLiteral, parseScalarValue, parseStringScalarLiteral } from './util'
 
 export const dateResolvers = {
   Date: new GraphQLScalarType({
@@ -14,7 +15,7 @@ export const dateResolvers = {
     serialize(value: Date): ScalarDate {
       return {
         type: ScalarType.DATE,
-        value: format(value, 'YYYY-MM-DD')
+        value: format(value, 'yyyy-MM-dd')
       }
     },
 
@@ -22,20 +23,20 @@ export const dateResolvers = {
       const scalarValue = parseScalarValue<string>(value, ScalarType.DATE)
 
       if (!isValidDate(scalarValue)) {
-        throw new GraphQLError(`Date must be a valid date in format "YYYY-MM-DD"`)
+        throw new UserInputError(`Date must be a valid date in format "YYYY-MM-DD"`)
       }
 
-      return parse(scalarValue)
+      return parse(scalarValue, 'yyyy-MM-dd', 0)
     },
 
     parseLiteral(ast: ValueNode): Date {
       const scalarValue = parseStringScalarLiteral(ast, ScalarType.DATE)
 
       if (!isValidDate(scalarValue)) {
-        throw new GraphQLError(`Date must be a valid date in format "YYYY-MM-DD"`)
+        throw new UserInputError(`Date must be a valid date in format "YYYY-MM-DD"`)
       }
 
-      return parse(scalarValue)
+      return parse(scalarValue, 'yyyy-MM-dd', 0)
     }
   }),
 
@@ -46,7 +47,7 @@ export const dateResolvers = {
     serialize(value: Date): ScalarDateTime {
       return {
         type: ScalarType.DATETIME,
-        value: format(value)
+        value: value.toISOString() //format(value, 'yyyy-MM-ddTHH:mm:ss.SSS X')
       }
     },
 
@@ -54,20 +55,24 @@ export const dateResolvers = {
       const scalarValue = parseScalarValue<string>(value, ScalarType.DATETIME)
 
       if (!isValidDateTime(scalarValue)) {
-        throw new GraphQLError(`DateTime must be a valid date in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`)
+        throw new UserInputError(
+          `DateTime must be a valid date in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`
+        )
       }
 
-      return parse(scalarValue)
+      return parse(scalarValue, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 0)
     },
 
     parseLiteral(ast: ValueNode): Date {
       const scalarValue = parseStringScalarLiteral(ast, ScalarType.DATETIME)
 
       if (!isValidDateTime(scalarValue)) {
-        throw new GraphQLError(`DateTime must be a valid date in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`)
+        throw new UserInputError(
+          `DateTime must be a valid date in format "YYYY-MM-DDTHH:mm:ss.SSSZ"`
+        )
       }
 
-      return parse(scalarValue)
+      return parse(scalarValue, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 0)
     }
   }),
 
@@ -90,7 +95,7 @@ export const dateResolvers = {
       if (result.success) {
         return result.value
       } else {
-        throw new GraphQLError('Hour must be a positive integer between 0 and 299')
+        throw new UserInputError('Hour must be a positive integer between 0 and 299')
       }
     },
 
@@ -102,14 +107,14 @@ export const dateResolvers = {
       if (result.success) {
         return result.value
       } else {
-        throw new GraphQLError('Hour must be a positive integer between 0 and 299')
+        throw new UserInputError('Hour must be a positive integer between 0 and 299')
       }
     }
   })
 }
 
 function isValidDate(value: string): boolean {
-  const date = parse(value)
+  const date = parse(value, 'yyyy-MM-dd', 0)
 
   if (!isValid(date) || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false
@@ -119,7 +124,7 @@ function isValidDate(value: string): boolean {
 }
 
 function isValidDateTime(value: string): boolean {
-  const date = parse(value)
+  const date = parse(value, 'yyyy-MM-ddTHH:mm:ss.SSSZ', 0)
 
   if (!isValid(date) || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)) {
     return false

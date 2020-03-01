@@ -1,9 +1,9 @@
-import dotenv from 'dotenv'
-
-import { readConfigByApplication } from '@src/config'
-import { initializeDatabase } from '@src/setup/database'
-import { createApp } from '@src/setup/express'
 import { createApolloEngine, createApolloServer } from '@src/setup/graphql'
+
+import { createApp } from '@src/setup/express'
+import dotenv from 'dotenv'
+import { initializeDatabase } from '@src/setup/database'
+import { readConfigByApplication } from '@src/config'
 
 dotenv.config()
 

@@ -1,10 +1,11 @@
-import { GraphQLError, GraphQLScalarType, ValueNode } from 'graphql'
-import KSUID from 'ksuid'
-
-import { BusinessID, Slug } from '@app/common/types'
-import { validateBusinessId, validateSlug } from '@app/validation'
-import { ScalarBusinessID, ScalarKsuid, ScalarSlug, ScalarType } from './types'
+import { GraphQLError, GraphQLFieldResolver, GraphQLScalarType, ValueNode } from 'graphql'
+import { ScalarKsuid, ScalarSlug, ScalarType } from './types'
+import { ScalarValidationError, ScalarValidationErrorType } from './util/scalarValidationError'
 import { parseScalarValue, parseStringScalarLiteral } from './util'
+
+import KSUID from 'ksuid'
+import { Slug } from '@app/common/types'
+import { validateSlug } from '@app/validation'
 
 export interface Node
   extends Readonly<{
@@ -23,13 +24,17 @@ export const commonResolvers = {
       }
     },
 
-    parseValue(value: any): KSUID {
+    parseValue(value: any): KSUID | ScalarValidationError {
       const scalarValue = parseScalarValue<string>(value, ScalarType.KSUID)
 
       try {
         return KSUID.parse(scalarValue)
       } catch (e) {
-        throw new GraphQLError('KSUID must be a valid KSUID')
+        return {
+          type: ScalarValidationErrorType.SCALAR_VALIDATION_ERROR,
+          message: 'KSUID must be a valid KSUID'
+        }
+        //  throw new GraphQLError('KSUID must be a valid KSUID')
       }
     },
 
@@ -76,42 +81,6 @@ export const commonResolvers = {
         return result.value
       } else {
         throw new GraphQLError('Slug must be a valid slug')
-      }
-    }
-  }),
-
-  BusinessID: new GraphQLScalarType({
-    description: 'BusinessID custom scalar type',
-    name: 'BusinessID',
-
-    serialize(value: BusinessID): ScalarBusinessID {
-      return {
-        type: ScalarType.BUSINESS_ID,
-        value: value.toString()
-      }
-    },
-
-    parseValue(value: any): BusinessID {
-      const scalarValue = parseScalarValue<string>(value, ScalarType.BUSINESS_ID)
-
-      const result = validateBusinessId(scalarValue)
-
-      if (result.success) {
-        return result.value
-      } else {
-        throw new GraphQLError('BusinessID must be a valid business id')
-      }
-    },
-
-    parseLiteral(ast: ValueNode): BusinessID {
-      const scalarValue = parseStringScalarLiteral(ast, ScalarType.BUSINESS_ID)
-
-      const result = validateBusinessId(scalarValue)
-
-      if (result.success) {
-        return result.value
-      } else {
-        throw new GraphQLError('BusinessID must be a valid business id')
       }
     }
   }),

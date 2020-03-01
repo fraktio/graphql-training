@@ -1,9 +1,0 @@
-type CollectiveAgreement implements Node {
-  ksuid: KSUID!
-  name: String!
-  timestamp: Timestamp!
-}
-
-type Query {
-  collectiveAgreements: [CollectiveAgreement!]!
-}

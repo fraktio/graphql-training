@@ -3,7 +3,15 @@ scalar KSUID
 
 scalar Slug
 
-scalar BusinessID
+scalar Phone
+
+scalar Email
+
+scalar Language
+
+scalar PersonalIdentityCode
+
+scalar CountryCode
 
 interface Node {
   ksuid: KSUID!

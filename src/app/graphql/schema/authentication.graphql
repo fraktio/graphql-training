@@ -1,0 +1,35 @@
+type Mutation {
+  login(input: LoginInput!): LoginOutput!
+  logout: LogoutOutput!
+  refreshToken: RefreshTokenOutput!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LoginOutput {
+  authenticatedUser: AuthenticatedUser
+}
+
+type LogoutOutput {
+  token: String!
+}
+
+type RefreshTokenOutput {
+  token: String
+}
+
+type AuthenticatedUser {
+  user: User!
+  token: String!
+}
+
+type User {
+  ksuid: KSUID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  timestamp: Timestamp!
+}

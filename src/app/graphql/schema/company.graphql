@@ -1,0 +1,56 @@
+type Company implements Node {
+  id: ID!
+  ksuid: KSUID!
+  name: String!
+  timestamp: Timestamp!
+  employees: [Person]!
+}
+
+type Query {
+  companies: [Company]!
+  company(ksuid: KSUID!): Company!
+}
+
+type Mutation {
+  addCompany(input: AddCompanyInput!): AddCompanyOutput!
+  editCompany(input: EditCompanyInput!): EditCompanyOutput!
+  addPersonToCompanyEmployee(
+    input: AddPersonToCompanyEmployeeInput!
+  ): AddPersonToCompanyEmployeeOutput!
+}
+
+input AddCompanyInput {
+  company: CompanyInput!
+}
+
+input EditCompanyInput {
+  ksuid: KSUID!
+  company: CompanyInput!
+}
+
+input CompanyInput {
+  name: String!
+}
+
+input AddPersonToCompanyEmployeeInput {
+  companyKsuid: KSUID!
+  personKsuid: KSUID!
+}
+
+union AddCompanyOutput = AddCompanySuccess | ValidationErrors
+
+type AddCompanySuccess {
+  company: Company!
+}
+
+union EditCompanyOutput = EditCompanySuccess | ValidationErrors
+
+type EditCompanySuccess {
+  company: Company!
+}
+
+union AddPersonToCompanyEmployeeOutput = AddPersonToCompanyEmployeeSuccess | ValidationErrors
+
+type AddPersonToCompanyEmployeeSuccess {
+  company: Company!
+}

@@ -1,26 +1,24 @@
-scalar PersonalIdentityCode
-
-scalar Language
+directive @upper on FIELD_DEFINITION
+directive @deprecated(reason: String = "This field is deprecated") on FIELD_DEFINITION | ENUM_VALUE
 
 type Person implements Node {
+  id: ID!
   ksuid: KSUID!
   firstName: String!
   lastName: String!
-  nickName: String
   personalIdentityCode: PersonalIdentityCode!
   phone: Phone
   email: Email!
-  address: Address!
   nationality: CountryCode!
-  iban: IBAN
-  bankAccountIsShared: Boolean!
-  bic: BIC
-  desiredSalary: Money
-  preferredWorkingAreas: [String!]!
   languages: [Language!]!
-  limitations: String
-  uiLanguage: UILanguage!
+  birthDay: Date!
   timestamp: Timestamp!
+  employers: [Company]!
+}
+
+type Query {
+  persons: [Person]!
+  person(ksuid: KSUID!): Person!
 }
 
 type Mutation {
@@ -29,32 +27,18 @@ type Mutation {
 }
 
 input AddPersonInput {
-  providerKsuid: KSUID!
   person: PersonInput!
-  personEmployment: PersonEmploymentInput!
 }
 
 input PersonInput {
   firstName: String!
   lastName: String!
-  nickName: String
   personalIdentityCode: PersonalIdentityCode!
   phone: Phone
   email: Email!
-  address: AddressInput!
   nationality: CountryCode!
-  iban: IBAN
-  bankAccountIsShared: Boolean!
-  bic: BIC
-  desiredSalary: Money
-  preferredWorkingAreas: [String!]!
   languages: [Language!]!
-  limitations: String
-}
-
-input PersonEmploymentInput {
-  collectiveAgreementKsuid: KSUID!
-  employment: EmploymentInput!
+  birthDay: Date!
 }
 
 union AddPersonOutput = AddPersonSuccess | ValidationErrors
@@ -64,7 +48,6 @@ type AddPersonSuccess {
 }
 
 input EditPersonInput {
-  providerKsuid: KSUID!
   ksuid: KSUID!
   person: PersonInput!
 }

@@ -1,6 +1,6 @@
 {
   "cors": {
-    "accessControlAllowOrigin": ["^https://enjoy.works.frakt.io$", "^https://enjoy.works$"]
+    "accessControlAllowOrigin": ["^https://person-gen.tunk.io$"]
   },
   "graphql": {
     "playground": false,

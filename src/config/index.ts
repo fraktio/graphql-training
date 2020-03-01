@@ -1,4 +1,5 @@
 import { Application } from 'express'
+import { DurationInputArg2 } from 'moment'
 import fs from 'fs'
 import path from 'path'
 
@@ -10,6 +11,27 @@ export interface Config
     }
     cors: {
       accessControlAllowOrigin: string[]
+    }
+    authentication: {
+      session: {
+        expirationTime: {
+          amount: number
+          unit: DurationInputArg2
+        }
+        refreshTime: {
+          amount: number
+          unit: DurationInputArg2
+        }
+      }
+    }
+    cache: {
+      redis: {
+        prefix: string
+      }
+      // Cache times in seconds
+      time: {
+        accounts: number
+      }
     }
   }> {}
 
