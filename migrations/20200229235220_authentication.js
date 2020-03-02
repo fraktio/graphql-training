@@ -1,7 +1,7 @@
 exports.up = function(knex) {
   return knex.schema.raw(`
 
-    CREATE TYPE access_rights AS ENUM ('PERSONAL', 'RECRUITING', 'SENSITIVE','ADMIN');
+    CREATE TYPE access_rights AS ENUM ('PERSONAL', 'RECRUITING', 'SENSITIVE', 'ADMIN');
 
     CREATE TABLE user_account (
       id SERIAL PRIMARY KEY,
@@ -10,7 +10,7 @@ exports.up = function(knex) {
       password TEXT NOT NULL,
       first_name TEXT NOT NULL,
       last_name TEXT NOT NULL,
-      roles access_rights[] NOT NULL,
+      access_rights access_rights[] NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       modified_at TIMESTAMP WITH TIME ZONE DEFAULT NULL
     );

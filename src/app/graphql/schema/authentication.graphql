@@ -1,7 +1,12 @@
+type Query {
+  currentUser: AuthenticatedUser
+}
+
 type Mutation {
   login(input: LoginInput!): LoginOutput!
   logout: LogoutOutput!
   refreshToken: RefreshTokenOutput!
+  addUserAccount(input: AddUserAccountInput!): AddUserAccountOutput!
 }
 
 input LoginInput {
@@ -32,4 +37,29 @@ type User {
   firstName: String!
   lastName: String!
   timestamp: Timestamp!
+  accessRights: [AccessRight!]!
+}
+
+input UserInput {
+  email: String!
+  firstName: String!
+  lastName: String!
+  accessRights: [AccessRight!]!
+}
+
+input AddUserAccountInput {
+  user: UserInput!
+}
+
+union AddUserAccountOutput = AddUserAccountSuccess | ValidationErrors
+
+type AddUserAccountSuccess {
+  user: User
+}
+
+enum AccessRight {
+  PERSONAL
+  RECRUITING
+  SENSITIVE
+  ADMIN
 }

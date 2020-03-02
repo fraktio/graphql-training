@@ -1,3 +1,4 @@
+import { authenticationResolvers } from './authenticationResolvers'
 import { commonResolvers } from './commonResolvers'
 import { companyResolvers } from './companyResolvers'
 import { dateResolvers } from './dateResolvers'
@@ -6,6 +7,7 @@ import { personResolvers } from './personResolvers'
 
 export const resolvers = mergeAll([
   {},
+  authenticationResolvers,
   commonResolvers,
   companyResolvers,
   dateResolvers,

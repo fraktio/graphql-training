@@ -5,5 +5,25 @@
   "graphql": {
     "playground": true,
     "engineProxy": false
+  },
+  "authentication": {
+    "session": {
+      "expirationTime": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "refreshTime": {
+        "amount": 3,
+        "unit": "hours"
+      }
+    }
+  },
+  "cache": {
+    "redis": {
+      "prefix": "training"
+    },
+    "time": {
+      "accounts": 86400
+    }
   }
 }

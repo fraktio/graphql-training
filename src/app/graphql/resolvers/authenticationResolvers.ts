@@ -1,25 +1,32 @@
-import { AuthenticatedUserRecord, LoginInput } from '@app/authentication/types'
+import {
+  AddUserAccountInput,
+  AuthenticatedUserRecord,
+  LoginInput,
+  UserRecord
+} from '@app/authentication/types'
+import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
 import { login, logout, refreshToken } from '@app/authentication/authenticationService'
 
 import { Context } from '@app/graphql/types'
 import { Maybe } from '@app/common/types'
 import { Root } from './types'
+import { addUserAccount } from '@app/authentication/authenticationRepository'
 import { decryptToken } from '../../../util/crypto'
 import { transaction } from '@app/util/database'
 import { withAuthenticatedUser } from '@app/graphql/resolvers/util/withAuthenticatedUser'
 
-type LoginArgs = {
+interface LoginArgs {
   input: LoginInput
 }
 
 type LoginOutput = LoginSuccess | LoginFailed
 
-type LoginSuccess = {
+interface LoginSuccess {
   success: true
   authenticatedUser: AuthenticatedUserRecord
 }
 
-type LoginFailed = {
+interface LoginFailed {
   success: false
 }
 
@@ -27,11 +34,23 @@ type LogoutOutput = {
   token: string
 }
 
-type RefreshTokenOutput = {
+interface RefreshTokenOutput {
   token: Maybe<string>
 }
 
-const authenticationResolvers = {
+interface AddUserArgs {
+  input: AddUserAccountInput
+}
+
+export type AddUserAccountOutput = AddUserAccountSuccess | ValidationErrors
+
+interface AddUserAccountSuccess
+  extends Readonly<{
+    user: UserRecord
+    success: true
+  }> {}
+
+export const authenticationResolvers = {
   Query: {
     currentUser(_: Root, args: {}, context: Context): AuthenticatedUserRecord {
       return withAuthenticatedUser(context, authenticatedUser => authenticatedUser)
@@ -40,9 +59,9 @@ const authenticationResolvers = {
 
   Mutation: {
     login(_: Root, { input }: LoginArgs, context: Context): Promise<LoginOutput> {
-      return transaction(async client => {
+      return transaction(async connection => {
         const authenticatedUser = await login(
-          client,
+          connection,
           input,
           context.config.authentication.session.expirationTime
         )
@@ -59,8 +78,8 @@ const authenticationResolvers = {
 
     logout(_: Root, args: {}, context: Context): Promise<LogoutOutput> {
       return withAuthenticatedUser(context, authenticatedUser =>
-        transaction(async client => {
-          const token = await logout(client, authenticatedUser.encryptedToken)
+        transaction(async connection => {
+          const token = await logout(connection, authenticatedUser.encryptedToken)
 
           return {
             token
@@ -70,12 +89,12 @@ const authenticationResolvers = {
     },
 
     refreshToken(_: Root, args: {}, context: Context): Promise<RefreshTokenOutput> {
-      return transaction(async client => {
+      return transaction(async connection => {
         let token = null
 
         if (context.encryptedAuthenticationToken != null) {
           const authenticationToken = await refreshToken(
-            client,
+            connection,
             context.encryptedAuthenticationToken,
             context.config.authentication.session.expirationTime
           )
@@ -89,6 +108,33 @@ const authenticationResolvers = {
           token
         }
       })
+    },
+
+    addUserAccount(
+      _: Root,
+      { input }: AddUserArgs,
+      context: Context
+    ): Promise<AddUserAccountOutput> {
+      return transaction(async connection => {
+        const result = await addUserAccount(connection, input)
+
+        if (result.success) {
+          return {
+            success: true as true,
+            user: result.value
+          }
+        }
+
+        return {
+          success: false as false,
+          validationErrors: [
+            {
+              code: ValidationErrorCode.UNIQUE_CONSTRAINT_VIOLATION,
+              message: result.error.field
+            }
+          ]
+        }
+      })
     }
   },
 
@@ -96,7 +142,10 @@ const authenticationResolvers = {
     token(authenticatedUser: AuthenticatedUserRecord, args: {}): string {
       return decryptToken(authenticatedUser.encryptedToken)
     }
+  },
+  AddUserAccountOutput: {
+    __resolveType(addUserAccountOutput: AddUserAccountOutput): string {
+      return addUserAccountOutput.success ? 'AddUserAccountOutputSuccess' : 'ValidationErrors'
+    }
   }
 }
-
-export default resolvers

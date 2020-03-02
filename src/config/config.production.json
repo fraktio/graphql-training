@@ -1,9 +1,29 @@
 {
   "cors": {
-    "accessControlAllowOrigin": ["^https://person-gen.tunk.io$"]
+    "accessControlAllowOrigin": ["^https://graphql-training.tunk.io$"]
   },
   "graphql": {
     "playground": false,
     "engineProxy": true
+  },
+  "authentication": {
+    "session": {
+      "expirationTime": {
+        "amount": 1,
+        "unit": "days"
+      },
+      "refreshTime": {
+        "amount": 3,
+        "unit": "hours"
+      }
+    }
+  },
+  "cache": {
+    "redis": {
+      "prefix": "training"
+    },
+    "time": {
+      "accounts": 86400
+    }
   }
 }
