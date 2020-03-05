@@ -1,16 +1,28 @@
-import { AuthenticatedUserRecord, AuthenticationTokenRecord, LoginInput, UserRecord } from './types'
+import {
+  AuthenticatedUserRecord,
+  AuthenticationTokenRecord,
+  LoginInput,
+  UserInput,
+  UserRecord
+} from './types'
+import { Maybe, Try } from '@app/common/types'
 import {
   addAuthenticationToken,
   deleteAuthenticationToken,
   getAuthenticationTokenByEncryptedToken
 } from './authenticationTokenRepository'
 import { createRandomIv, encryptTokenWithIv, getJwtPrivateKey } from '@src/util/crypto'
-import { getUserByEmail, getUserByUuid, tryGetUser } from './authenticationRepository'
+import {
+  createUserAccount,
+  getUserByEmail,
+  getUserByUuid,
+  tryGetUser
+} from './authenticationRepository'
 
 import { DurationInputArg2 } from 'moment'
 import KSUID from 'ksuid'
-import { Maybe } from '@app/common/types'
 import { PoolClient } from 'pg'
+import { UniqueConstraintViolationError } from '@app/util/database'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import moment from 'moment'
@@ -209,4 +221,22 @@ async function decodeToken(token: string): Promise<Maybe<DecodedToken>> {
 
 function encryptToken(token: string, iv: string): string {
   return encryptTokenWithIv(Buffer.from(token), Buffer.from(iv, 'hex'))
+}
+
+export async function addUserAccount(
+  client: PoolClient,
+  user: UserInput
+): Promise<Try<UserRecord, UniqueConstraintViolationError>> {
+  const encryptedPassword = await bcrypt.hash(user.password, 12)
+
+  const inputWithEncryptedPassword = {
+    encryptedPassword,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    password: user.password,
+    accessRights: user.accessRights
+  }
+
+  return createUserAccount(client, inputWithEncryptedPassword)
 }

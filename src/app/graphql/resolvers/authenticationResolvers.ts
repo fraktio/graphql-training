@@ -5,12 +5,16 @@ import {
   UserRecord
 } from '@app/authentication/types'
 import { ValidationErrorCode, ValidationErrors } from '@app/graphql/schema/types'
-import { login, logout, refreshToken } from '@app/authentication/authenticationService'
+import {
+  addUserAccount,
+  login,
+  logout,
+  refreshToken
+} from '@app/authentication/authenticationService'
 
 import { Context } from '@app/graphql/types'
 import { Maybe } from '@app/common/types'
 import { Root } from './types'
-import { addUserAccount } from '@app/authentication/authenticationRepository'
 import { decryptToken } from '../../../util/crypto'
 import { transaction } from '@app/util/database'
 import { withAuthenticatedUser } from '@app/graphql/resolvers/util/withAuthenticatedUser'
@@ -116,7 +120,7 @@ export const authenticationResolvers = {
       context: Context
     ): Promise<AddUserAccountOutput> {
       return transaction(async connection => {
-        const result = await addUserAccount(connection, input)
+        const result = await addUserAccount(connection, input.user)
 
         if (result.success) {
           return {
@@ -145,7 +149,12 @@ export const authenticationResolvers = {
   },
   AddUserAccountOutput: {
     __resolveType(addUserAccountOutput: AddUserAccountOutput): string {
-      return addUserAccountOutput.success ? 'AddUserAccountOutputSuccess' : 'ValidationErrors'
+      return addUserAccountOutput.success ? 'AddUserAccountSuccess' : 'ValidationErrors'
+    }
+  },
+  LoginOutput: {
+    __resolveType(loginOutput: LoginOutput): string {
+      return loginOutput.success ? 'LoginSuccess' : 'LoginFailed'
     }
   }
 }

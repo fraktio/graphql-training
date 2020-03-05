@@ -17,6 +17,10 @@ export function getJwtPrivateKey(): Secret {
 const algorithm = 'aes-256-ctr'
 const encryptionKey = process.env.TOKEN_ENCRYPTION_KEY || '' // Must be 32 characters (256 bits)
 
+if (!process.env.TOKEN_ENCRYPTION_KEY || process.env.TOKEN_ENCRYPTION_KEY.length !== 32) {
+  throw new ApolloError('env: TOKEN_ENCRYPTION_KEY missing or not exactly 32 characters!')
+}
+
 export function createRandomIv(): Buffer {
   const ivLength = 16
 

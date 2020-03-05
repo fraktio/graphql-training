@@ -2,7 +2,7 @@ directive @upper on FIELD_DEFINITION
 directive @deprecated(reason: String = "This field is deprecated") on FIELD_DEFINITION | ENUM_VALUE
 
 type Person implements Node {
-  id: ID!
+  id: ID! @auth(requires: ADMIN)
   ksuid: KSUID!
   firstName: String!
   lastName: String!

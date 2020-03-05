@@ -1,3 +1,12 @@
+directive @auth(requires: AccessRight = ADMIN) on OBJECT | FIELD_DEFINITION
+
+enum AccessRight {
+  PERSONAL
+  RECRUITING
+  SENSITIVE
+  ADMIN
+}
+
 type Query {
   currentUser: AuthenticatedUser
 }
@@ -14,7 +23,13 @@ input LoginInput {
   password: String!
 }
 
-type LoginOutput {
+union LoginOutput = LoginSuccess | LoginFailed
+
+type LoginFailed {
+  sucess: Boolean
+}
+
+type LoginSuccess {
   authenticatedUser: AuthenticatedUser
 }
 
@@ -33,18 +48,23 @@ type AuthenticatedUser {
 
 type User {
   ksuid: KSUID!
-  email: String!
-  firstName: String!
-  lastName: String!
+  email: Email!
+  name: UserName!
   timestamp: Timestamp!
   accessRights: [AccessRight!]!
 }
 
+type UserName {
+  firstName: String!
+  lastName: String!
+}
+
 input UserInput {
-  email: String!
+  email: Email!
   firstName: String!
   lastName: String!
   accessRights: [AccessRight!]!
+  password: String!
 }
 
 input AddUserAccountInput {
@@ -55,11 +75,4 @@ union AddUserAccountOutput = AddUserAccountSuccess | ValidationErrors
 
 type AddUserAccountSuccess {
   user: User
-}
-
-enum AccessRight {
-  PERSONAL
-  RECRUITING
-  SENSITIVE
-  ADMIN
 }
