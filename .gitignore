@@ -1,0 +1,7 @@
+HOST=0.0.0.0
+node_modules
+build
+.env
+
+.DS_Store
+yarn-error.log

@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  # Database
+  database:
+    image: postgres:12.1
+    command: postgres -c log_statement=all
+    environment:
+      - POSTGRES_DB=graphql_training
+      - POSTGRES_USER=graphql_training
+      - POSTGRES_PASSWORD=graphql_training
+      - TZ=Europe/Helsinki
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - database:/var/lib/postgresql/data
+
+  # Test database
+  test_database:
+    image: postgres:12.1
+    command: postgres -c log_statement=all
+    environment:
+      - POSTGRES_DB=graphql_training_test
+      - POSTGRES_USER=graphql_training
+      - POSTGRES_PASSWORD=graphql_training
+      - TZ=Europe/Helsinki
+    ports:
+      - '127.0.0.1:5433:5432'
+    volumes:
+      - test_database:/var/lib/postgresql/data
+
+volumes:
+  database:
+  test_database:

@@ -1,0 +1,10 @@
+scalar Date
+
+scalar DateTime
+
+scalar Hour
+
+type Timestamp {
+  createdAt: DateTime!
+  modifiedAt: DateTime
+}

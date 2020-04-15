@@ -1,0 +1,29 @@
+{
+  "presets": [
+    "@babel/preset-typescript",
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": true
+        }
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "module-resolver",
+      {
+        "root": ["./src", "./__tests__"],
+        "alias": {
+          "@src": "./src",
+          "@app": "./src/app",
+          "@test": "./__tests__"
+        },
+        "extensions": [".ts"]
+      }
+    ],
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-proposal-object-rest-spread"
+  ]
+}

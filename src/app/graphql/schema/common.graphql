@@ -1,0 +1,19 @@
+# K-Sortable Globally Unique ID (= KSUID)
+scalar KSUID
+
+scalar Slug
+
+scalar Phone
+
+scalar Email
+
+scalar Language
+
+scalar PersonalIdentityCode
+
+scalar CountryCode
+
+interface Node {
+  ksuid: KSUID!
+  timestamp: Timestamp!
+}

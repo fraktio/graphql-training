@@ -1,0 +1,78 @@
+directive @auth(requires: AccessRight = ADMIN) on OBJECT | FIELD_DEFINITION
+
+enum AccessRight {
+  PERSONAL
+  RECRUITING
+  SENSITIVE
+  ADMIN
+}
+
+type Query {
+  currentUser: AuthenticatedUser
+}
+
+type Mutation {
+  login(input: LoginInput!): LoginOutput!
+  logout: LogoutOutput!
+  refreshToken: RefreshTokenOutput!
+  addUserAccount(input: AddUserAccountInput!): AddUserAccountOutput!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+union LoginOutput = LoginSuccess | LoginFailed
+
+type LoginFailed {
+  sucess: Boolean
+}
+
+type LoginSuccess {
+  authenticatedUser: AuthenticatedUser
+}
+
+type LogoutOutput {
+  token: String!
+}
+
+type RefreshTokenOutput {
+  token: String
+}
+
+type AuthenticatedUser {
+  user: User!
+  token: String!
+}
+
+type User {
+  ksuid: KSUID!
+  email: Email!
+  name: UserName!
+  timestamp: Timestamp!
+  accessRights: [AccessRight!]!
+}
+
+type UserName {
+  firstName: String!
+  lastName: String!
+}
+
+input UserInput {
+  email: Email!
+  firstName: String!
+  lastName: String!
+  accessRights: [AccessRight!]!
+  password: String!
+}
+
+input AddUserAccountInput {
+  user: UserInput!
+}
+
+union AddUserAccountOutput = AddUserAccountSuccess | ValidationErrors
+
+type AddUserAccountSuccess {
+  user: User
+}
