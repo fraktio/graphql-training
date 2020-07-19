@@ -41,7 +41,7 @@
     "knex": "^0.20.3",
     "ksuid": "^1.2.0",
     "libphonenumber-js": "^1.7.40",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "merge-graphql-schemas": "^1.7.3",
     "pg": "^7.14.0",
     "sql-template-strings": "^2.2.2",
